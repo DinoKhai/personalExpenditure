@@ -29,7 +29,7 @@
   </div>
 </nav>
 
-<main class="main">
+<main class="main compact-dashboard">
 
   <!-- Page header -->
   <div class="page-header">
@@ -106,8 +106,13 @@
 
   <!-- Transactions table -->
   <p class="section-title">Transactions</p>
-  <div class="tx-count-meta">
-    <span id="exp-count" class="tx-count-badge">0 entries</span>
+  <div class="tx-toolbar">
+    <div class="tx-search-wrap">
+      <input type="text" id="f-search" placeholder="Search category or notes" aria-label="Search category or notes">
+    </div>
+    <div class="tx-count-meta">
+      <span id="exp-count" class="tx-count-badge">0 entries</span>
+    </div>
   </div>
   <div class="card" style="padding:0;overflow:hidden">
     <div class="table-wrap">

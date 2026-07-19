@@ -107,8 +107,8 @@ function renderTransactionSummary(rows, data, year, month = '') {
   const goal = DB.getGeneralGoal({ year, month });
   const goalLine = goal
     ? (total <= goal
-      ? `Budget status: ₹${formatINR(goal - total, 0)} remaining out of ₹${formatINR(goal, 0)} goal.`
-      : `Budget status: ₹${formatINR(total - goal, 0)} over the ₹${formatINR(goal, 0)} goal.`)
+      ? `Budget status: <strong>₹${formatINR(goal - total, 0)}</strong> remaining out of <strong>₹${formatINR(goal, 0)}</strong> goal.`
+      : `Budget status: <strong>₹${formatINR(total - goal, 0)}</strong> over the <strong>₹${formatINR(goal, 0)}</strong> goal.`)
     : 'Budget status: No budget goal set for this scope.';
 
   const dayMap = {};
@@ -131,7 +131,7 @@ function renderTransactionSummary(rows, data, year, month = '') {
     .map(r => r.category)
     .slice(0, 3);
   const breachLine = breaches.length
-    ? `Limit breaches: ${breaches.map(escHtml).join(', ')}${data.byCategory.filter(r => r.monthly_limit && Number(r.total) > Number(r.monthly_limit) * breachBaseMultiplier).length > 3 ? ' +' : ''}.`
+    ? `Limit breaches: ${breaches.map(name => `<strong>${escHtml(name)}</strong>`).join(', ')}${data.byCategory.filter(r => r.monthly_limit && Number(r.total) > Number(r.monthly_limit) * breachBaseMultiplier).length > 3 ? ' +' : ''}.`
     : 'Limit breaches: None.';
 
   let prevRows = [];
@@ -152,7 +152,7 @@ function renderTransactionSummary(rows, data, year, month = '') {
   const delta = total - prevTotal;
   const deltaPct = prevTotal ? Math.round((delta / prevTotal) * 100) : null;
   const compareLine = prevTotal
-    ? `Compared to ${comparisonLabel}: ${delta >= 0 ? 'up' : 'down'} ₹${formatINR(Math.abs(delta), 0)} (${deltaPct >= 0 ? '+' : ''}${deltaPct}%).`
+    ? `Compared to ${comparisonLabel}: ${delta >= 0 ? 'up' : 'down'} <strong>₹${formatINR(Math.abs(delta), 0)}</strong> (${deltaPct >= 0 ? '+' : ''}${deltaPct}%).`
     : `Compared to ${comparisonLabel}: no prior data.`;
 
   container.innerHTML = `
@@ -160,13 +160,13 @@ function renderTransactionSummary(rows, data, year, month = '') {
     <p class="scope">${scopeLabel}</p>
     <ul>
       <li>${rows.length} transaction${rows.length === 1 ? '' : 's'} across ${activeDays} active day${activeDays === 1 ? '' : 's'}.</li>
-      <li>Total spend: ₹${formatINR(total, 0)} · Avg: ₹${formatINR(avg, 0)} · Median: ₹${formatINR(med, 0)}.</li>
-      ${topCat ? `<li>Top category: ${escHtml(topCat.category)} (${topCatPct}% of total, ₹${formatINR(topCat.total, 0)}).</li>` : ''}
-      <li>Top 3 by spend: ${top3BySpend.map(r => `${escHtml(r.category)} (₹${formatINR(r.total, 0)})`).join(', ')} (${top3Pct}% of total).</li>
-      <li>Top categories by transaction count: ${top3ByCount.map(([name, cnt]) => `${escHtml(name)} (${cnt})`).join(', ')}.</li>
-      <li>Largest transaction: ₹${formatINR(maxTx.amount, 0)} on ${formatDate(maxTx.date)} (${escHtml(maxTx.category_name)}).</li>
-      <li>Highest spending day: ${formatDate(peakDay)} (₹${formatINR(peakDayTotal, 0)}).</li>
-      <li>Weekend vs weekday: ₹${formatINR(weekendTotal, 0)} (${weekendPct}%) vs ₹${formatINR(weekdayTotal, 0)} (${100 - weekendPct}%).</li>
+      <li>Total spend: <strong>₹${formatINR(total, 0)}</strong> · Avg: <strong>₹${formatINR(avg, 0)}</strong> · Median: <strong>₹${formatINR(med, 0)}</strong>.</li>
+      ${topCat ? `<li>Top category: <strong>${escHtml(topCat.category)}</strong> (${topCatPct}% of total, <strong>₹${formatINR(topCat.total, 0)}</strong>).</li>` : ''}
+      <li>Top 3 by spend: ${top3BySpend.map(r => `<strong>${escHtml(r.category)}</strong> (<strong>₹${formatINR(r.total, 0)}</strong>)`).join(', ')} (${top3Pct}% of total).</li>
+      <li>Top categories by transaction count: ${top3ByCount.map(([name, cnt]) => `<strong>${escHtml(name)}</strong> (${cnt})`).join(', ')}.</li>
+      <li>Largest transaction: <strong>₹${formatINR(maxTx.amount, 0)}</strong> on ${formatDate(maxTx.date)} (<strong>${escHtml(maxTx.category_name)}</strong>).</li>
+      <li>Highest spending day: ${formatDate(peakDay)} (<strong>₹${formatINR(peakDayTotal, 0)}</strong>).</li>
+      <li>Weekend vs weekday: <strong>₹${formatINR(weekendTotal, 0)}</strong> (${weekendPct}%) vs <strong>₹${formatINR(weekdayTotal, 0)}</strong> (${100 - weekendPct}%).</li>
       <li>${goalLine}</li>
       <li>${breachLine}</li>
       <li>${compareLine}</li>

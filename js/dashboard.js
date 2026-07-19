@@ -1,11 +1,14 @@
 /* dashboard.js */
 let allCategories = [];
+let activeMonthKey = '';
 
 function init() {
   populateYears();
   setDefaultFilters();
+  activeMonthKey = getCurrentMonthKey();
   loadCategories();
   loadAll();
+  setupMonthAutoShift();
 }
 
 function populateYears() {
@@ -18,7 +21,38 @@ function populateYears() {
 }
 
 function setDefaultFilters() {
-  document.getElementById('f-month').value = new Date().getMonth() + 1;
+  const now = new Date();
+  document.getElementById('f-year').value = String(now.getFullYear());
+  document.getElementById('f-month').value = String(now.getMonth() + 1);
+  document.getElementById('f-from').value = '';
+  document.getElementById('f-to').value = '';
+}
+
+function getCurrentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${now.getMonth() + 1}`;
+}
+
+function applyCurrentMonthFilters() {
+  setDefaultFilters();
+}
+
+function setupMonthAutoShift() {
+  const syncIfMonthChanged = () => {
+    const current = getCurrentMonthKey();
+    if (current === activeMonthKey) return;
+    activeMonthKey = current;
+    applyCurrentMonthFilters();
+    loadAll();
+    showToast('Dashboard auto-switched to current month', 'info');
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    syncIfMonthChanged();
+  });
+
+  setInterval(syncIfMonthChanged, 600000);
 }
 
 function loadCategories() {
@@ -34,7 +68,8 @@ function getFilters() {
     month:    document.getElementById('f-month').value,
     from:     document.getElementById('f-from').value,
     to:       document.getElementById('f-to').value,
-    category: document.getElementById('f-category').value
+    category: document.getElementById('f-category').value,
+    search:   document.getElementById('f-search').value.trim()
   };
 }
 
@@ -243,8 +278,22 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   document.getElementById('f-from').value = '';
   document.getElementById('f-to').value   = '';
   document.getElementById('f-category').value = '';
-  setDefaultFilters();
+  document.getElementById('f-search').value = '';
   populateYears();
+  setDefaultFilters();
+  activeMonthKey = getCurrentMonthKey();
+  loadAll();
+});
+
+let searchDebounceId = null;
+document.getElementById('f-search').addEventListener('input', () => {
+  clearTimeout(searchDebounceId);
+  searchDebounceId = setTimeout(loadAll, 180);
+});
+document.getElementById('f-search').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  clearTimeout(searchDebounceId);
   loadAll();
 });
 

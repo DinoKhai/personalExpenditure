@@ -700,6 +700,17 @@ th.amount-col { text-align: right; }
   color: var(--text-3);
 }
 
+.tx-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem;
+  margin: -0.45rem 0 .35rem;
+}
+.tx-search-wrap { flex: 1; max-width: 360px; }
+.tx-search-wrap input { min-height: 34px; }
+.tx-toolbar .tx-count-meta { margin: 0; }
+
 /* ── Badges ──────────────────────────────────────────────────── */
 .badge {
   display: inline-flex;
@@ -861,11 +872,11 @@ th.amount-col { text-align: right; }
 /* Compact New Entry page */
 .compact-entry .page-header { margin-bottom: 1rem; }
 .compact-entry .form-card {
-  padding: 1.1rem;
-  max-width: 470px;
+  padding: .95rem;
+  max-width: 450px;
   border-radius: var(--radius);
 }
-.compact-entry .form-stack { gap: .8rem; }
+.compact-entry .form-stack { gap: .7rem; }
 .compact-entry label {
   font-size: .62rem;
   letter-spacing: .06em;
@@ -873,15 +884,15 @@ th.amount-col { text-align: right; }
 .compact-entry input[type="text"],
 .compact-entry input[type="date"],
 .compact-entry select {
-  min-height: 34px;
-  padding: 6px 9px;
-  font-size: .86rem;
+  min-height: 32px;
+  padding: 5px 8px;
+  font-size: .82rem;
 }
 .compact-entry .input-prefix span { left: 9px; font-size: .82rem; }
 .compact-entry .input-prefix input { padding-left: 22px; }
 .compact-entry .field-hint,
 .compact-entry .field-error { font-size: .66rem; margin-top: 2px; }
-.compact-entry .btn { min-height: 32px; padding: 6px 11px; font-size: .75rem; }
+.compact-entry .btn { min-height: 30px; padding: 5px 10px; font-size: .72rem; }
 
 /* Compact Reports page */
 .compact-reports .page-header { margin-bottom: .85rem; }
@@ -894,20 +905,20 @@ th.amount-col { text-align: right; }
   letter-spacing: .06em;
 }
 .compact-reports .year-filter select {
-  min-height: 32px;
-  min-width: 104px;
-  font-size: .82rem;
-  padding: 5px 9px;
+  min-height: 30px;
+  min-width: 98px;
+  font-size: .8rem;
+  padding: 4px 8px;
 }
-.compact-reports .year-filter .btn { min-height: 30px; padding: 5px 10px; }
+.compact-reports .year-filter .btn { min-height: 28px; padding: 4px 9px; }
 .compact-reports .stat-grid {
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: .55rem;
-  margin-bottom: 1rem;
+  gap: .5rem;
+  margin-bottom: .85rem;
 }
 .compact-reports .stat-box {
   border-radius: var(--radius);
-  padding: .7rem .8rem;
+  padding: .62rem .72rem;
 }
 .compact-reports .stat-val { font-size: 1.08rem; }
 .compact-reports .stat-lbl {
@@ -916,13 +927,31 @@ th.amount-col { text-align: right; }
 }
 .compact-reports .chart-card {
   border-radius: var(--radius);
-  padding: .95rem;
-  margin-bottom: .8rem;
+  padding: .82rem;
+  margin-bottom: .68rem;
 }
 .compact-reports .chart-title {
-  font-size: .72rem;
-  margin-bottom: .75rem;
+  font-size: .7rem;
+  margin-bottom: .58rem;
 }
+
+/* Compact Dashboard page */
+.compact-dashboard .page-header { margin-bottom: 1.2rem; }
+.compact-dashboard .page-title { font-size: 1.48rem; }
+.compact-dashboard .page-subtitle { font-size: .82rem; }
+.compact-dashboard .btn { min-height: 31px; padding: 5px 10px; font-size: .74rem; }
+.compact-dashboard .filter-card.compact-filter { padding: .6rem; margin-bottom: .8rem !important; }
+.compact-dashboard .filter-card.compact-filter .filter-grid { gap: .5rem; }
+.compact-dashboard .filter-card.compact-filter input[type="text"],
+.compact-dashboard .filter-card.compact-filter input[type="date"],
+.compact-dashboard .filter-card.compact-filter select {
+  min-height: 31px;
+  font-size: .8rem;
+  padding: 5px 8px;
+}
+.compact-dashboard .section-title { margin: 1rem 0 .45rem; }
+.compact-dashboard .tx-toolbar { margin: 0 0 .35rem; }
+.compact-dashboard .tx-search-wrap input { min-height: 31px; font-size: .8rem; }
 
 /* Compact admin UI (Categories, Spending Limits, Budget Goal tabs) */
 .compact-admin .tabs { margin-bottom: .55rem; }
@@ -978,6 +1007,50 @@ th.amount-col { text-align: right; }
 .compact-admin .goal-row { cursor: pointer; }
 .compact-admin .goal-row:hover td { background: var(--card-hover); }
 .compact-admin .goal-row.active td { background: var(--primary-dim); }
+.compact-admin #tab-goal .goal-card { padding: .65rem; }
+.compact-admin #tab-goal .form-row {
+  gap: .5rem;
+  margin-bottom: .35rem !important;
+}
+.compact-admin #tab-goal .form-group { margin-bottom: .2rem; }
+.compact-admin #tab-goal input[type="text"],
+.compact-admin #tab-goal select {
+  min-height: 31px;
+  font-size: .8rem;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.compact-admin #tab-goal .d-flex.gap-sm {
+  gap: .4rem;
+  margin-top: .45rem !important;
+}
+.compact-admin #tab-goal .btn { min-height: 30px; padding: 5px 10px; font-size: .72rem; }
+.compact-admin #tab-goal .section-title { margin: .75rem 0 .35rem; }
+.compact-admin #tab-goal .divider { margin: .65rem 0; }
+.compact-admin #tab-goal th { padding: .4rem .55rem; }
+.compact-admin #tab-goal td { padding: .34rem .5rem; font-size: .74rem; }
+
+.compact-admin .limits-table tbody tr:hover td { background: var(--card-hover); }
+.compact-admin .limits-table .limit-cell-cat {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+}
+.compact-admin .limits-table .limit-cell-action {
+  text-align: center;
+  white-space: nowrap;
+}
+.compact-admin .limits-table .limit-input-wrap { max-width: 170px; }
+.compact-admin .limits-table .limit-input {
+  min-height: 30px;
+  font-size: .8rem;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.compact-admin .limits-table .limit-empty {
+  color: var(--text-3);
+  font-size: .72rem;
+}
 
 /* ── Divider ─────────────────────────────────────────────────── */
 .divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
@@ -1065,6 +1138,13 @@ th.amount-col { text-align: right; }
   .summary-grid { grid-template-columns: 1fr; }
   .limit-grid { grid-template-columns: 1fr; }
   .main { padding: 1.25rem .875rem 3rem; }
+  .tx-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .4rem;
+  }
+  .tx-search-wrap { max-width: 100%; }
+  .tx-toolbar .tx-count-meta { justify-content: flex-end; }
 }
 
 /* ── Filter collapse (legacy alias) ─────────────────────────── */
@@ -1120,44 +1200,43 @@ th.amount-col { text-align: right; }
   /* ── Admin spending limits table ─────────────────── */
   .limits-table thead { display: none; }
   .limits-table tbody tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: .24rem .45rem;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
     padding: .45rem .55rem;
-    margin-bottom: .35rem;
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--card) 95%, var(--bg-2) 5%);
+    border-bottom: 1px solid var(--border-subtle);
   }
-  .limits-table tbody tr:last-child { margin-bottom: 0; }
+  .limits-table tbody tr:last-child { border-bottom: none; }
   .limits-table tbody td { display: block; padding: 0; border: none; margin: 0; }
   .limits-table tbody td:nth-child(1) {
-    grid-column: 1 / -1;
+    flex: 1;
+    min-width: 0;
     font-weight: 600;
     font-size: .74rem;
     color: var(--text-2);
   }
-  .limits-table tbody td:nth-child(2) { grid-column: 1; }
+  .limits-table tbody td:nth-child(2) { flex-shrink: 0; }
   .limits-table tbody td:nth-child(3) {
-    grid-column: 2;
+    flex-shrink: 0;
     text-align: right;
-    align-self: center;
     white-space: nowrap;
   }
-  .limits-table .input-prefix { max-width: 150px !important; }
+  .limits-table .limit-cell-cat { gap: .4rem; }
+  .limits-table .input-prefix { width: 124px; max-width: 124px !important; }
   .limits-table .input-prefix span { left: 8px; font-size: .78rem; }
   .limits-table .input-prefix input {
     min-height: 30px;
     padding: 4px 8px 4px 20px;
     font-size: .8rem;
   }
+  .limits-table .limit-empty { font-size: .66rem; }
   .limits-table .btn-danger-ghost.btn-sm {
     min-height: 22px;
     padding: 2px 6px;
     font-size: .64rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--danger);
     background: transparent;
-    color: var(--text-3);
+    color: var(--danger);
   }
   .limits-table .btn-danger-ghost.btn-sm:hover {
     border-color: var(--danger);

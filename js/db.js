@@ -132,6 +132,16 @@
     });
   }
 
+  function _searchFilter(rows, categoriesById, search) {
+    const needle = String(search || '').trim().toLowerCase();
+    if (!needle) return rows;
+    return rows.filter(e => {
+      const cat = (categoriesById[Number(e.category_id)] || {}).name || '';
+      const notes = String(e.notes || '');
+      return `${cat} ${notes}`.toLowerCase().includes(needle);
+    });
+  }
+
   // ── Categories ─────────────────────────────────────────────────────
 
   function getAllCategories() {
@@ -203,9 +213,10 @@
   function getExpenditures(filters = {}) {
     const { categories, expenditures } = _read();
     let rows = _dateFilter(expenditures, filters);
-    if (filters.category) rows = rows.filter(e => Number(e.category_id) === Number(filters.category));
     const categoryById = {};
     categories.forEach(c => { categoryById[Number(c.id)] = c; });
+    if (filters.category) rows = rows.filter(e => Number(e.category_id) === Number(filters.category));
+    rows = _searchFilter(rows, categoryById, filters.search);
     return rows.map(e => ({
       ...e,
       category_name: (categoryById[Number(e.category_id)] || {}).name,
@@ -253,7 +264,10 @@
   function getSummary(filters = {}) {
     const { categories, expenditures, spending_limits } = _read();
     let rows = _dateFilter(expenditures, filters);
+    const categoryById = {};
+    categories.forEach(c => { categoryById[Number(c.id)] = c; });
     if (filters.category) rows = rows.filter(e => Number(e.category_id) === Number(filters.category));
+    rows = _searchFilter(rows, categoryById, filters.search);
     const totalsByCategoryId = {};
     rows.forEach(e => {
       const key = Number(e.category_id);

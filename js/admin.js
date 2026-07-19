@@ -124,19 +124,19 @@ function loadLimits() {
       : '';
     return `
       <tr>
-        <td><strong>${c.name}</strong></td>
+        <td class="limit-cell-cat"><span class="cat-swatch" style="--cat:${c.color || '#7c6af7'}"></span><strong>${c.name}</strong></td>
         <td>
-          <div class="input-prefix" style="max-width:220px">
+          <div class="input-prefix limit-input-wrap">
             <span>₹</span>
             <input type="text" class="limit-input" data-cat="${c.id}"
                    value="${existing}" placeholder="No limit"
                    inputmode="decimal" style="font-variant-numeric:tabular-nums">
           </div>
         </td>
-        <td style="text-align:center">
+        <td class="limit-cell-action">
           ${limitMap[c.id] !== undefined
             ? `<button class="btn btn-danger-ghost btn-sm" onclick="removeLimit(${c.id})">Remove</button>`
-            : '<span style="color:var(--text-3);font-size:.8rem">—</span>'
+            : '<span class="limit-empty">Not set</span>'
           }
         </td>
       </tr>`;
