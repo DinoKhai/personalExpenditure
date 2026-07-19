@@ -261,16 +261,25 @@
     add('Categories',     categories,      ['id', 'name', 'created_at']);
     add('Expenditures',   expenditures,    ['id', 'date', 'category_id', 'amount', 'notes', 'created_at']);
     add('SpendingLimits', spending_limits, ['id', 'category_id', 'monthly_limit']);
-    // Use Blob + object URL so mobile browsers show a "Save / Share" dialog
+    // Use Web Share API on mobile (iOS Share Sheet → Save to Files)
+    // Fall back to <a download> on desktop
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob  = new Blob([wbout], { type: 'application/octet-stream' });
-    const url   = URL.createObjectURL(blob);
-    const a     = document.createElement('a');
-    a.href      = url;
-    a.download  = 'finance.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+    const blob  = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const file  = new File([blob], 'finance.xlsx', { type: blob.type });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'FinTrack Export' })
+        .catch(err => { if (err.name !== 'AbortError') alert('Share failed: ' + err.message); });
+    } else {
+      // Desktop fallback
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href     = url;
+      a.download = 'finance.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+    }
   }
 
   // ── Excel Import ───────────────────────────────────────────────────
