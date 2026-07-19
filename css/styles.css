@@ -181,13 +181,13 @@ nav {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-2);
-  font-size: 1.1rem;
+  font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
   padding: 6px 8px;
   border-radius: var(--radius-sm);
-  height: 34px;
-  width: 34px;
+  height: 44px;
+  width: 44px;
   align-items: center;
   justify-content: center;
 }
@@ -623,4 +623,77 @@ th.amount-col { text-align: right; }
   .filter-grid { grid-template-columns: 1fr; }
   .summary-grid { grid-template-columns: 1fr; }
   .main { padding: 1.25rem .875rem 3rem; }
+}
+
+/* ── Filter collapse ─────────────────────────────────────────── */
+.filter-card.hidden { display: none; }
+
+/* ── Mobile card-style tables (≤ 640px = iPhone 15 range) ────── */
+@media (max-width: 640px) {
+
+  /* ── Transaction table ───────────────────────────── */
+  .tx-table thead { display: none; }
+
+  .tx-table tfoot tr { display: flex; align-items: center; }
+  .tx-table tfoot td { padding: .625rem 1rem; }
+  .tx-table tfoot td:nth-child(1) { flex: 1; }
+  .tx-table tfoot td:nth-child(3),
+  .tx-table tfoot td:nth-child(4) { display: none; }
+
+  .tx-table tbody tr {
+    display: block;
+    padding: .75rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .tx-table tbody tr:last-child { border-bottom: none; }
+  .tx-table tbody td { display: block; padding: 0; border: none; }
+  .tx-table tbody td:nth-child(1) { /* Date */
+    font-size: .72rem;
+    color: var(--text-3);
+    margin-bottom: 5px;
+  }
+  .tx-table tbody td:nth-child(2) { /* Category */
+    margin-bottom: 4px;
+  }
+  .tx-table tbody td:nth-child(3) { /* Amount */
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-align: left;
+    margin-bottom: .5rem;
+  }
+  .tx-table tbody td:nth-child(4) { display: none; }
+  .tx-table tbody td:nth-child(5) { /* Actions */
+    display: flex;
+    gap: .375rem;
+    justify-content: flex-end;
+  }
+
+  /* ── Admin categories table ──────────────────────── */
+  .cat-table thead { display: none; }
+  .cat-table tbody tr {
+    display: flex;
+    align-items: center;
+    padding: .75rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    gap: .5rem;
+  }
+  .cat-table tbody tr:last-child { border-bottom: none; }
+  .cat-table tbody td { padding: 0; border: none; }
+  .cat-table tbody td:nth-child(1) { display: none; } /* # */
+  .cat-table tbody td:nth-child(2) { flex: 1; }
+  .cat-table tbody td:nth-child(3) { flex-shrink: 0; }
+
+  /* ── Admin spending limits table ─────────────────── */
+  .limits-table thead { display: none; }
+  .limits-table tbody tr {
+    display: block;
+    padding: .75rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .limits-table tbody tr:last-child { border-bottom: none; }
+  .limits-table tbody td { display: block; padding: 0; border: none; margin-bottom: .5rem; }
+  .limits-table tbody td:nth-child(1) { font-weight: 600; }
+  .limits-table tbody td:nth-child(2) { }
+  .limits-table tbody td:nth-child(3) { margin-bottom: 0; text-align: right; }
+  .limits-table .input-prefix { max-width: 100% !important; }
 }

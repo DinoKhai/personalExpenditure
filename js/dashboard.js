@@ -40,53 +40,7 @@ function getFilters() {
 
 function loadAll() {
   const filters = getFilters();
-  renderSummary(DB.getSummary(filters));
   renderTable(DB.getExpenditures(filters));
-}
-
-/* ── Summary cards ──────────────────────────────────────────────────── */
-function renderSummary(rows) {
-  const grid = document.getElementById('summary-grid');
-  const withSpend = rows.filter(r => r.total > 0);
-  const grandTotal = rows.reduce((s, r) => s + r.total, 0);
-
-  if (!withSpend.length && grandTotal === 0) {
-    grid.innerHTML = `<div class="summary-card" style="grid-column:1/-1"><div class="empty"><div class="empty-icon">💳</div><div class="empty-text">No transactions in this period</div></div></div>`;
-    return;
-  }
-
-  const cards = withSpend.map(row => {
-    let statusClass = '', progressHtml = '';
-    if (row.monthly_limit) {
-      const pct = Math.min(150, (row.total / row.monthly_limit) * 100);
-      const fillClass = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
-      statusClass = fillClass;
-      const warnMsg = pct >= 100
-        ? `<div class="sc-warning">⚠️ Over limit by ₹${formatINR(row.total - row.monthly_limit)}</div>`
-        : '';
-      progressHtml = `
-        <div class="sc-limit">Monthly Limit: ₹${formatINR(row.monthly_limit, 0)} &nbsp;·&nbsp; ${Math.round((row.total / row.monthly_limit) * 100)}% used</div>
-        ${warnMsg}
-        <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${Math.min(100, pct)}%"></div></div>`;
-    } else {
-      progressHtml = `<div class="sc-limit text-muted">No limit set</div>`;
-    }
-    return `
-      <div class="summary-card ${statusClass}">
-        <div class="sc-label">${row.category_name}</div>
-        <div class="sc-amount">₹${formatINR(row.total)}</div>
-        ${progressHtml}
-      </div>`;
-  }).join('');
-
-  const totalCard = `
-    <div class="summary-card total">
-      <div class="sc-label">Grand Total</div>
-      <div class="sc-amount">₹${formatINR(grandTotal)}</div>
-      <div class="sc-limit">${withSpend.length} categor${withSpend.length === 1 ? 'y' : 'ies'}</div>
-    </div>`;
-
-  grid.innerHTML = cards + totalCard;
 }
 
 /* ── Transactions table ─────────────────────────────────────────────── */
@@ -167,6 +121,14 @@ document.getElementById('modal-close-btn').addEventListener('click', closeModal)
 document.getElementById('modal-cancel').addEventListener('click', closeModal);
 document.getElementById('modal-backdrop').addEventListener('click', closeModal);
 setupAmountInput(document.getElementById('edit-amount'));
+
+/* ── Filter toggle ──────────────────────────────────────────────────── */
+document.getElementById('btn-toggle-filters').addEventListener('click', () => {
+  const bar = document.getElementById('filter-bar');
+  const btn = document.getElementById('btn-toggle-filters');
+  const isHidden = bar.classList.toggle('hidden');
+  btn.textContent = isHidden ? 'Filters' : 'Hide Filters';
+});
 
 /* ── Filter controls ────────────────────────────────────────────────── */
 document.getElementById('btn-apply').addEventListener('click', loadAll);
