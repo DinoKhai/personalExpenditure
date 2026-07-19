@@ -26,7 +26,7 @@ function renderCategories() {
   tbody.innerHTML = categories.map((c, i) => `
     <tr>
       <td style="color:var(--text-3);font-size:.8rem">${i + 1}</td>
-      <td><strong>${c.name}</strong></td>
+      <td><span class="cat-swatch" style="--cat:${c.color || '#7c6af7'}"></span><strong>${c.name}</strong></td>
       <td style="text-align:center;white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="openRename(${c.id},'${escHtml(c.name)}')">Rename</button>
         <button class="btn btn-danger-ghost btn-sm" onclick="deleteCategory(${c.id},'${escHtml(c.name)}')">Delete</button>
@@ -184,20 +184,76 @@ document.getElementById('save-limits-btn').addEventListener('click', () => {
 });
 
 /* ── Budget Goal ─────────────────────────────────────────────────────── */
-function loadGoal() {
-  const goal = DB.getGeneralGoal();
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+let selectedGoalKey = '';
+
+function populateGoalYears() {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const years = [];
+  for (let y = currentYear + 1; y >= currentYear - 5; y--) years.push(y);
+
+  const goalYear = document.getElementById('goal-year');
+  const filterYear = document.getElementById('goal-filter-year');
+  goalYear.innerHTML = years.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+  filterYear.innerHTML = '<option value="">All Years</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+}
+
+function loadGoalForSelection() {
+  const year = document.getElementById('goal-year').value;
+  const month = document.getElementById('goal-month').value;
+  const goal = DB.getGeneralGoal({ year, month });
   const inp  = document.getElementById('goal-amount');
-  inp.value = goal
-    ? parseFloat(goal).toLocaleString('en-IN', { maximumFractionDigits: 2 })
-    : '';
+  inp.value = goal ? parseFloat(goal).toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '';
+}
+
+function renderGoalList() {
+  const year = document.getElementById('goal-filter-year').value;
+  const month = document.getElementById('goal-filter-month').value;
+  const rows = DB.getBudgetGoals({ year, month });
+  const tbody = document.getElementById('goal-list-tbody');
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="3"><div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">No goals found</div></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const key = `${r.year}-${String(r.month).padStart(2, '0')}`;
+    const active = selectedGoalKey === key ? ' class="goal-row active"' : ' class="goal-row"';
+    return `
+    <tr${active} data-year="${r.year}" data-month="${r.month}">
+      <td>${r.year}</td>
+      <td>${MONTHS[r.month - 1]}</td>
+      <td class="amount-col">₹${formatINR(r.amount)}</td>
+    </tr>`;
+  }).join('');
 }
 
 function setupGoalInput() {
-  const inp = document.getElementById('goal-amount');
-  setupAmountInput(inp);
+  setupAmountInput(document.getElementById('goal-amount'));
 }
 
+document.getElementById('goal-year').addEventListener('change', loadGoalForSelection);
+document.getElementById('goal-month').addEventListener('change', loadGoalForSelection);
+document.getElementById('goal-filter-year').addEventListener('change', renderGoalList);
+document.getElementById('goal-filter-month').addEventListener('change', renderGoalList);
+document.getElementById('goal-list-tbody').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-year][data-month]');
+  if (!tr) return;
+  const year = tr.getAttribute('data-year');
+  const month = tr.getAttribute('data-month');
+  selectedGoalKey = `${year}-${String(month).padStart(2, '0')}`;
+
+  document.getElementById('goal-year').value = year;
+  document.getElementById('goal-month').value = String(Number(month));
+  loadGoalForSelection();
+  renderGoalList();
+});
+
 document.getElementById('save-goal-btn').addEventListener('click', () => {
+  const year = document.getElementById('goal-year').value;
+  const month = document.getElementById('goal-month').value;
   const inp = document.getElementById('goal-amount');
   const err = document.getElementById('goal-err');
   err.textContent = '';
@@ -210,20 +266,34 @@ document.getElementById('save-goal-btn').addEventListener('click', () => {
     err.classList.add('visible');
     return;
   }
-  DB.setGeneralGoal(val);
-  showToast('Budget goal saved ✅');
-  loadGoal();
+
+  try {
+    DB.setGeneralGoal(val, year, month);
+    selectedGoalKey = `${year}-${String(month).padStart(2, '0')}`;
+    showToast(`Budget goal saved for ${MONTHS[Number(month) - 1]} ${year} ✅`);
+    loadGoalForSelection();
+    renderGoalList();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
 });
 
 document.getElementById('clear-goal-btn').addEventListener('click', () => {
-  DB.setGeneralGoal(null);
+  const year = document.getElementById('goal-year').value;
+  const month = document.getElementById('goal-month').value;
+  DB.setGeneralGoal(null, year, month);
+  selectedGoalKey = '';
   document.getElementById('goal-amount').value = '';
   document.getElementById('goal-err').classList.remove('visible');
-  showToast('Budget goal cleared');
+  showToast(`Budget goal cleared for ${MONTHS[Number(month) - 1]} ${year}`);
+  renderGoalList();
 });
 
 /* ── Init ──────────────────────────────────────────────────────────── */
 loadCategories();
 loadLimits();
-loadGoal();
+populateGoalYears();
+document.getElementById('goal-month').value = String(new Date().getMonth() + 1);
+loadGoalForSelection();
+renderGoalList();
 setupGoalInput();

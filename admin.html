@@ -11,6 +11,7 @@
 
 <nav>
   <div class="nav-inner">
+    <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation"></button>
     <a href="index.html" class="nav-brand">
       <div class="nav-brand-icon">₹</div>
       FinTrack
@@ -22,13 +23,13 @@
       <a href="reports.html"   class="nav-link">Reports</a>
     </div>
     <div class="nav-right">
+      <button class="perf-toggle" id="perf-toggle" title="Toggle performance mode">⚡</button>
       <button class="theme-toggle" id="theme-toggle" title="Toggle theme">☀️</button>
-      <button class="menu-toggle"  id="menu-toggle">&#9776;</button>
     </div>
   </div>
 </nav>
 
-<main class="main">
+<main class="main compact-admin">
 
   <div class="page-header">
     <div>
@@ -47,12 +48,12 @@
   <!-- Tab: Categories -->
   <div class="tab-panel active" id="tab-categories">
     <div class="card">
-      <div class="d-flex gap-sm align-c" style="margin-bottom:1.25rem;flex-wrap:wrap">
+      <div class="d-flex gap-sm align-c" style="margin-bottom:.75rem;flex-wrap:wrap">
         <div class="form-group" style="flex:1;min-width:200px">
           <label>New Category Name</label>
           <input type="text" id="new-cat-name" placeholder="e.g. Subscriptions" maxlength="60">
         </div>
-        <div class="form-group" style="padding-top:1.35rem">
+        <div class="form-group" style="padding-top:.95rem">
           <button class="btn btn-primary" id="add-cat-btn">Add Category</button>
         </div>
       </div>
@@ -77,7 +78,7 @@
   <!-- Tab: Spending Limits -->
   <div class="tab-panel" id="tab-limits">
     <div class="card">
-      <p class="text-muted text-sm" style="margin-bottom:1.25rem">
+      <p class="text-muted text-sm" style="margin-bottom:.75rem">
         Set a <strong>monthly spending limit</strong> per category. The dashboard will show a progress bar and alert when you're near or over the limit.
       </p>
       <div class="table-wrap">
@@ -94,25 +95,90 @@
           </tbody>
         </table>
       </div>
-      <div style="margin-top:1.25rem;display:flex;justify-content:flex-end">
+      <div style="margin-top:.8rem;display:flex;justify-content:flex-end">
         <button class="btn btn-primary" id="save-limits-btn">Save All Limits</button>
       </div>
     </div>
   </div>
-  <!-- Tab: Budget Goal -->
+
+  <!-- Tab: Budget Goal -->
   <div class="tab-panel" id="tab-goal">
-    <div class="card" style="max-width:480px">
-      <p class="text-muted text-sm" style="margin-bottom:1.5rem">
-        Set an overall monthly spending goal. The dashboard summary will show your total spending against this budget.
+    <div class="card">
+      <p class="text-muted text-sm" style="margin-bottom:.85rem">
+        Set monthly budget goals by month and year. Dashboard summary will automatically use the goal matching your selected transaction filters. Saving again for the same month/year updates the existing goal.
       </p>
+      <div class="form-row" style="margin-bottom:.5rem">
+        <div class="form-group">
+          <label>Goal Year</label>
+          <select id="goal-year"></select>
+        </div>
+        <div class="form-group">
+          <label>Goal Month</label>
+          <select id="goal-month">
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+      </div>
       <div class="form-group">
         <label>Monthly Budget Goal (₹)</label>
         <input type="text" id="goal-amount" placeholder="e.g. 50,000" inputmode="numeric">
         <span class="field-error" id="goal-err"></span>
       </div>
-      <div class="d-flex gap-sm" style="margin-top:1.25rem">
+      <div class="d-flex gap-sm" style="margin-top:.75rem">
         <button class="btn btn-primary" id="save-goal-btn">Save Goal</button>
-        <button class="btn btn-ghost"   id="clear-goal-btn">Clear Goal</button>
+        <button class="btn btn-ghost"   id="clear-goal-btn">Clear Selected Goal</button>
+      </div>
+
+      <div class="divider"></div>
+      <p class="section-title" style="margin-bottom:.45rem">Saved Budget Goals</p>
+      <div class="form-row" style="margin-bottom:.5rem">
+        <div class="form-group">
+          <label>Filter Year</label>
+          <select id="goal-filter-year"></select>
+        </div>
+        <div class="form-group">
+          <label>Filter Month</label>
+          <select id="goal-filter-month">
+            <option value="">All Months</option>
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Month</th>
+              <th class="amount-col">Goal (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="goal-list-tbody">
+            <tr><td colspan="3"><div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">No goals yet</div></div></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

@@ -2,6 +2,12 @@
 (function () {
   const saved = localStorage.getItem('theme');
   if (saved === 'light') document.documentElement.classList.add('light');
+  const perfSaved = localStorage.getItem('perf_mode_v1');
+  const prefersReduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const lowPowerDevice = typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 4;
+  if (perfSaved === 'on' || (perfSaved !== 'off' && (prefersReduced || lowPowerDevice))) {
+    document.documentElement.classList.add('perf-mode');
+  }
 })();
 
 function toggleTheme() {
@@ -16,6 +22,35 @@ function updateThemeIcon() {
   const isLight = document.documentElement.classList.contains('light');
   btn.textContent = isLight ? '🌙' : '☀️';
   btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+}
+
+function isPerformanceMode() {
+  const perfSaved = localStorage.getItem('perf_mode_v1');
+  if (perfSaved === 'on') return true;
+  if (perfSaved === 'off') return false;
+  const prefersReduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const lowPowerDevice = typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 4;
+  return prefersReduced || lowPowerDevice;
+}
+
+function updatePerfIcon() {
+  const btn = document.getElementById('perf-toggle');
+  if (!btn) return;
+  const on = isPerformanceMode();
+  btn.textContent = on ? '⚡' : '⚪';
+  btn.title = on ? 'Performance mode: On' : 'Performance mode: Off';
+}
+
+function applyPerformanceMode(on) {
+  document.documentElement.classList.toggle('perf-mode', on);
+  document.body.classList.toggle('perf-mode', on);
+  updatePerfIcon();
+}
+
+function togglePerformanceMode() {
+  const next = !isPerformanceMode();
+  localStorage.setItem('perf_mode_v1', next ? 'on' : 'off');
+  applyPerformanceMode(next);
 }
 
 /* ── INR formatting ─────────────────────────────────────────────────── */
@@ -88,17 +123,39 @@ function showToast(message, type = 'success') {
 
 /* ── Navigation ─────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
+  applyPerformanceMode(isPerformanceMode());
   updateThemeIcon();
   const themeBtn = document.getElementById('theme-toggle');
   if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+  const perfBtn = document.getElementById('perf-toggle');
+  if (perfBtn) perfBtn.addEventListener('click', togglePerformanceMode);
 
   const toggle   = document.getElementById('menu-toggle');
   const navLinks = document.getElementById('nav-links');
   if (toggle && navLinks) {
-    toggle.addEventListener('click', () => navLinks.classList.toggle('open'));
-    navLinks.querySelectorAll('.nav-link').forEach(l =>
-      l.addEventListener('click', () => navLinks.classList.remove('open'))
-    );
+    const NAV_STATE_KEY = 'nav_expanded_v1';
+    const applyNavState = (isOpen) => {
+      navLinks.classList.toggle('open', isOpen);
+      toggle.classList.toggle('is-open', isOpen);
+      document.body.classList.toggle('nav-expanded', isOpen);
+      toggle.setAttribute('aria-label', isOpen ? 'Collapse navigation' : 'Expand navigation');
+      localStorage.setItem(NAV_STATE_KEY, isOpen ? '1' : '0');
+    };
+
+    const saved = localStorage.getItem(NAV_STATE_KEY);
+    applyNavState(saved === '1');
+    requestAnimationFrame(() => document.body.classList.add('nav-ready'));
+
+    toggle.addEventListener('click', () => {
+      const isOpen = !navLinks.classList.contains('open');
+      applyNavState(isOpen);
+    });
+
+    document.addEventListener('click', e => {
+      if (!navLinks.classList.contains('open')) return;
+      if (navLinks.contains(e.target) || toggle.contains(e.target)) return;
+      applyNavState(false);
+    });
   }
 
   // Active link — use just the filename so it works on GitHub Pages sub-paths
@@ -111,3 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (match) link.classList.add('active');
   });
 });
+
+window.AppPrefs = {
+  isPerformanceMode
+};

@@ -11,6 +11,7 @@
 
 <nav>
   <div class="nav-inner">
+    <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation"></button>
     <a href="index.html" class="nav-brand">
       <div class="nav-brand-icon">₹</div>
       FinTrack
@@ -22,8 +23,8 @@
       <a href="reports.html"   class="nav-link">Reports</a>
     </div>
     <div class="nav-right">
+      <button class="perf-toggle" id="perf-toggle" title="Toggle performance mode">⚡</button>
       <button class="theme-toggle" id="theme-toggle" title="Toggle theme">☀️</button>
-      <button class="menu-toggle"  id="menu-toggle">&#9776;</button>
     </div>
   </div>
 </nav>
@@ -46,7 +47,7 @@
   </div>
 
   <!-- Filter bar (collapsed by default) -->
-  <div class="card filter-card hidden" id="filter-bar" style="margin-bottom:1.75rem">
+  <div class="card filter-card compact-filter hidden" id="filter-bar" style="margin-bottom:1rem">
     <div class="filter-grid">
       <div class="form-group">
         <label>Year</label>
@@ -91,7 +92,8 @@
       </div>
     </div>
   </div>
-
+
+
   <!-- Summary (collapsed by default) -->
   <div class="d-flex align-c justify-b" style="margin-bottom:.625rem">
     <button class="section-toggle-btn" id="btn-toggle-summary">
@@ -104,6 +106,9 @@
 
   <!-- Transactions table -->
   <p class="section-title">Transactions</p>
+  <div class="tx-count-meta">
+    <span id="exp-count" class="tx-count-badge">0 entries</span>
+  </div>
   <div class="card" style="padding:0;overflow:hidden">
     <div class="table-wrap">
       <table class="tx-table">

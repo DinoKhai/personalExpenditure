@@ -47,7 +47,9 @@ function loadAll() {
 /* ── Summary cards ──────────────────────────────────────────────────── */
 function renderSummary(rows) {
   const grid      = document.getElementById('summary-grid');
-  const goal      = DB.getGeneralGoal();
+  const filters   = getFilters();
+  const goal      = DB.getGeneralGoal(filters);
+  const goalLabel = DB.getGoalScopeLabel(filters);
   const withSpend = rows.filter(r => r.total > 0);
   const grandTotal = rows.reduce((s, r) => s + r.total, 0);
 
@@ -56,54 +58,80 @@ function renderSummary(rows) {
     const pct       = Math.min(150, (grandTotal / goal) * 100);
     const fillClass = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
     const dotColor  = pct >= 100 ? 'var(--danger)' : pct >= 80 ? 'var(--warning)' : 'var(--success)';
-    const warnMsg   = pct >= 100
-      ? `<div class="sc-warning">Over budget by ₹${formatINR(grandTotal - goal)}</div>`
-      : '';
+    const subText   = pct >= 100
+      ? `Over by ₹${formatINR(grandTotal - goal)}`
+      : `${Math.round((grandTotal / goal) * 100)}% of goal used`;
     goalHtml = `
-      <div class="summary-card goal-card" style="grid-column:1/-1">
-        <div class="sc-label"><span class="sc-dot" style="background:${dotColor}"></span>Overall Budget Goal</div>
-        <div class="sc-amount">₹${formatINR(grandTotal)} <span style="font-size:.85rem;font-weight:400;color:var(--text-3)">of ₹${formatINR(goal, 0)}</span></div>
-        ${warnMsg}
-        <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${Math.min(100, pct)}%"></div></div>
+      <div class="summary-line goal-line ${fillClass}">
+        <div class="sl-main">
+          <div class="sl-label"><span class="sl-dot" style="background:${dotColor}"></span>Overall Goal (${goalLabel})</div>
+          <div class="sl-amount">₹${formatINR(grandTotal)} / ₹${formatINR(goal, 0)}</div>
+        </div>
+        <div class="sl-sub ${pct >= 100 ? 'warn' : ''}">${subText}</div>
+        <div class="progress-bar compact"><div class="progress-fill ${fillClass}" style="width:${Math.min(100, pct)}%"></div></div>
       </div>`;
   }
 
   if (!withSpend.length && grandTotal === 0 && !goal) {
-    grid.innerHTML = `<div class="summary-card" style="grid-column:1/-1"><div class="empty"><div class="empty-icon">💳</div><div class="empty-text">No transactions in this period</div></div></div>`;
+    grid.innerHTML = `<div class="summary-line"><div class="sl-main"><div class="sl-label">No summary yet</div></div><div class="sl-sub">No transactions in this period</div></div>`;
     return;
   }
 
-  const cards = withSpend.map(row => {
-    let statusClass = '', progressHtml = '', dotColor = 'var(--text-3)';
+  const limitCards = [];
+  const noLimitRows = [];
+
+  withSpend.forEach(row => {
     if (row.monthly_limit) {
+      let statusClass = '', progressHtml = '', dotColor = 'var(--text-3)', subText = '';
       const pct       = Math.min(150, (row.total / row.monthly_limit) * 100);
       statusClass     = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
       dotColor        = pct >= 100 ? 'var(--danger)' : pct >= 80 ? 'var(--warning)' : 'var(--success)';
-      const warnMsg   = pct >= 100
-        ? `<div class="sc-warning">Over by ₹${formatINR(row.total - row.monthly_limit)}</div>`
-        : '';
+      subText         = pct >= 100
+        ? `Over by ₹${formatINR(row.total - row.monthly_limit)}`
+        : `Limit ₹${formatINR(row.monthly_limit, 0)} · ${Math.round((row.total / row.monthly_limit) * 100)}%`;
       progressHtml = `
-        <div class="sc-limit">₹${formatINR(row.monthly_limit, 0)} limit · ${Math.round((row.total / row.monthly_limit) * 100)}%</div>
-        ${warnMsg}
-        <div class="progress-bar"><div class="progress-fill ${statusClass}" style="width:${Math.min(100, pct)}%"></div></div>`;
-    } else {
-      progressHtml = `<div class="sc-limit">No limit set</div>`;
-    }
-    return `
-      <div class="summary-card ${statusClass}">
-        <div class="sc-label"><span class="sc-dot" style="background:${dotColor}"></span>${row.category_name}</div>
-        <div class="sc-amount">₹${formatINR(row.total)}</div>
+        <div class="sl-sub ${pct >= 100 ? 'warn' : ''}">${subText}</div>
+        <div class="progress-bar compact"><div class="progress-fill ${statusClass}" style="width:${Math.min(100, pct)}%"></div></div>`;
+      limitCards.push(`
+      <div class="summary-line ${statusClass}">
+        <div class="sl-main">
+          <div class="sl-label"><span class="sl-dot" style="background:${dotColor}"></span>${row.category_name}</div>
+          <div class="sl-amount">₹${formatINR(row.total)}</div>
+        </div>
         ${progressHtml}
-      </div>`;
-  }).join('');
+      </div>`);
+    } else {
+      noLimitRows.push(`
+        <div class="sl-value-row">
+          <span class="sl-value-name">${row.category_name}</span>
+          <span class="sl-value-amt">₹${formatINR(row.total)}</span>
+        </div>`);
+    }
+  });
 
-  grid.innerHTML = goalHtml + cards;
+  const noLimitBlock = noLimitRows.length
+    ? `
+      <div class="summary-line no-limit-bucket">
+        <div class="sl-main">
+          <div class="sl-label"><span class="sl-dot" style="background:var(--text-3)"></span>Other Categories</div>
+        </div>
+        <div class="sl-values">${noLimitRows.join('')}</div>
+      </div>`
+    : '';
+
+  const limitBlock = limitCards.length
+    ? `<div class="limit-grid">${limitCards.join('')}</div>`
+    : '';
+
+  grid.innerHTML = goalHtml + limitBlock + noLimitBlock;
 }
 
 /* ── Transactions table ─────────────────────────────────────────────── */
 function renderTable(rows) {
   const tbody   = document.getElementById('exp-tbody');
   const totalEl = document.getElementById('exp-total');
+  const countEl = document.getElementById('exp-count');
+  countEl.textContent = `${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}`;
 
   if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="3"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">No transactions found for this filter</div></div></td></tr>`;
@@ -115,7 +143,7 @@ function renderTable(rows) {
   tbody.innerHTML = rows.map(r => `
     <tr class="tx-row" onclick="toggleTxRow(this)" data-id="${r.id}">
       <td class="tx-date">${formatDate(r.date)}</td>
-      <td class="tx-cat"><span class="badge badge-cat">${r.category_name}</span></td>
+      <td class="tx-cat"><span class="badge badge-cat" style="--cat:${r.category_color || '#7c6af7'}">${r.category_name}</span></td>
       <td class="tx-amt amount-col">₹${formatINR(r.amount)}</td>
     </tr>
     <tr class="tx-expand" id="txe-${r.id}">

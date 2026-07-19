@@ -1,12 +1,11 @@
 /* reports.js – Chart.js reports (static / no server) */
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-const PALETTE = [
-  '#7c6af7','#22c55e','#f59e0b','#f43f5e','#38bdf8',
-  '#a78bfa','#34d399','#fb923c','#f472b6','#2dd4bf'
-];
-
 let charts = {};
+
+function isPerformanceMode() {
+  return !!(window.AppPrefs && typeof window.AppPrefs.isPerformanceMode === 'function' && window.AppPrefs.isPerformanceMode());
+}
 
 function getThemeColors() {
   const s = getComputedStyle(document.documentElement);
@@ -23,6 +22,7 @@ function chartDefaults() {
   const c = getThemeColors();
   Chart.defaults.color = c.text2;
   Chart.defaults.borderColor = c.border;
+  Chart.defaults.animation = isPerformanceMode() ? false : { duration: 260 };
   Chart.defaults.plugins.tooltip.backgroundColor = c.card;
   Chart.defaults.plugins.tooltip.titleColor      = c.text;
   Chart.defaults.plugins.tooltip.bodyColor       = c.text2;
@@ -48,25 +48,142 @@ function populateYears() {
 function loadReport() {
   chartDefaults();
   const year = document.getElementById('rep-year').value;
-  document.getElementById('chart1-year').textContent = year;
+  const month = document.getElementById('rep-month').value;
+  const scope = month ? `${MONTHS[Number(month) - 1]} ${year}` : year;
+  document.getElementById('chart1-year').textContent = scope;
 
-  const data = DB.getReports(year);
-  renderStats(data, year);
+  const data = DB.getReports(year, month);
+  const txRows = DB.getExpenditures({ year, month });
+  renderTransactionSummary(txRows, data, year, month);
+  renderStats(data, year, month);
   renderMonthlyChart(data.byMonth, year);
   renderCategoryChart(data.byCategory);
   renderStackedChart(data.monthly, data.byCategory);
 }
 
+function escHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function median(nums) {
+  if (!nums.length) return 0;
+  const sorted = [...nums].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function renderTransactionSummary(rows, data, year, month = '') {
+  const container = document.getElementById('rep-summary');
+  const scopeLabel = month ? `${MONTHS[Number(month) - 1]} ${year}` : `Year ${year}`;
+
+  if (!rows.length) {
+    container.innerHTML = `
+      <h3>Transaction Summary</h3>
+      <p class="scope">${scopeLabel}</p>
+      <ul><li>No transactions found for this period.</li></ul>`;
+    return;
+  }
+
+  const total = rows.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const avg = total / rows.length;
+  const med = median(rows.map(r => Number(r.amount || 0)));
+  const topCat = data.byCategory[0];
+  const maxTx = rows.reduce((best, r) => Number(r.amount) > Number(best.amount) ? r : best, rows[0]);
+  const activeDays = new Set(rows.map(r => r.date)).size;
+  const topCatPct = topCat ? Math.round((Number(topCat.total || 0) / total) * 100) : 0;
+  const top3Total = data.byCategory.slice(0, 3).reduce((s, r) => s + Number(r.total || 0), 0);
+  const top3Pct = total ? Math.round((top3Total / total) * 100) : 0;
+  const top3BySpend = data.byCategory.slice(0, 3);
+
+  const countMap = {};
+  rows.forEach(r => {
+    const k = r.category_name || 'Unknown';
+    countMap[k] = (countMap[k] || 0) + 1;
+  });
+  const top3ByCount = Object.entries(countMap)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 3);
+
+  const goal = DB.getGeneralGoal({ year, month });
+  const goalLine = goal
+    ? (total <= goal
+      ? `Budget status: ₹${formatINR(goal - total, 0)} remaining out of ₹${formatINR(goal, 0)} goal.`
+      : `Budget status: ₹${formatINR(total - goal, 0)} over the ₹${formatINR(goal, 0)} goal.`)
+    : 'Budget status: No budget goal set for this scope.';
+
+  const dayMap = {};
+  rows.forEach(r => { dayMap[r.date] = (dayMap[r.date] || 0) + Number(r.amount || 0); });
+  const [peakDay, peakDayTotal] = Object.entries(dayMap).sort((a, b) => b[1] - a[1])[0];
+
+  let weekendTotal = 0;
+  let weekdayTotal = 0;
+  rows.forEach(r => {
+    const d = new Date(`${r.date}T00:00:00`);
+    const dow = d.getDay();
+    if (dow === 0 || dow === 6) weekendTotal += Number(r.amount || 0);
+    else weekdayTotal += Number(r.amount || 0);
+  });
+  const weekendPct = total ? Math.round((weekendTotal / total) * 100) : 0;
+
+  const breachBaseMultiplier = month ? 1 : 12;
+  const breaches = data.byCategory
+    .filter(r => r.monthly_limit && Number(r.total) > Number(r.monthly_limit) * breachBaseMultiplier)
+    .map(r => r.category)
+    .slice(0, 3);
+  const breachLine = breaches.length
+    ? `Limit breaches: ${breaches.map(escHtml).join(', ')}${data.byCategory.filter(r => r.monthly_limit && Number(r.total) > Number(r.monthly_limit) * breachBaseMultiplier).length > 3 ? ' +' : ''}.`
+    : 'Limit breaches: None.';
+
+  let prevRows = [];
+  let comparisonLabel = '';
+  if (month) {
+    const m = Number(month);
+    const y = Number(year);
+    const pm = m === 1 ? 12 : m - 1;
+    const py = m === 1 ? y - 1 : y;
+    prevRows = DB.getExpenditures({ year: py, month: pm });
+    comparisonLabel = `${MONTHS[pm - 1]} ${py}`;
+  } else {
+    const py = Number(year) - 1;
+    prevRows = DB.getExpenditures({ year: py });
+    comparisonLabel = String(py);
+  }
+  const prevTotal = prevRows.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const delta = total - prevTotal;
+  const deltaPct = prevTotal ? Math.round((delta / prevTotal) * 100) : null;
+  const compareLine = prevTotal
+    ? `Compared to ${comparisonLabel}: ${delta >= 0 ? 'up' : 'down'} ₹${formatINR(Math.abs(delta), 0)} (${deltaPct >= 0 ? '+' : ''}${deltaPct}%).`
+    : `Compared to ${comparisonLabel}: no prior data.`;
+
+  container.innerHTML = `
+    <h3>Transaction Summary</h3>
+    <p class="scope">${scopeLabel}</p>
+    <ul>
+      <li>${rows.length} transaction${rows.length === 1 ? '' : 's'} across ${activeDays} active day${activeDays === 1 ? '' : 's'}.</li>
+      <li>Total spend: ₹${formatINR(total, 0)} · Avg: ₹${formatINR(avg, 0)} · Median: ₹${formatINR(med, 0)}.</li>
+      ${topCat ? `<li>Top category: ${escHtml(topCat.category)} (${topCatPct}% of total, ₹${formatINR(topCat.total, 0)}).</li>` : ''}
+      <li>Top 3 by spend: ${top3BySpend.map(r => `${escHtml(r.category)} (₹${formatINR(r.total, 0)})`).join(', ')} (${top3Pct}% of total).</li>
+      <li>Top categories by transaction count: ${top3ByCount.map(([name, cnt]) => `${escHtml(name)} (${cnt})`).join(', ')}.</li>
+      <li>Largest transaction: ₹${formatINR(maxTx.amount, 0)} on ${formatDate(maxTx.date)} (${escHtml(maxTx.category_name)}).</li>
+      <li>Highest spending day: ${formatDate(peakDay)} (₹${formatINR(peakDayTotal, 0)}).</li>
+      <li>Weekend vs weekday: ₹${formatINR(weekendTotal, 0)} (${weekendPct}%) vs ₹${formatINR(weekdayTotal, 0)} (${100 - weekendPct}%).</li>
+      <li>${goalLine}</li>
+      <li>${breachLine}</li>
+      <li>${compareLine}</li>
+    </ul>`;
+}
+
 /* ── KPI Stats ──────────────────────────────────────────────────────── */
-function renderStats(data, year) {
+function renderStats(data, year, month = '') {
   const total      = data.byMonth.reduce((s, r) => s + r.total, 0);
   const avgMonthly = data.byMonth.length ? total / data.byMonth.length : 0;
   const topCat     = data.byCategory[0];
+  const scopeLabel = month ? `${MONTHS[Number(month) - 1]} ${year}` : year;
 
   document.getElementById('stat-grid').innerHTML = `
     <div class="stat-box">
       <div class="stat-val">₹${formatINR(total, 0)}</div>
-      <div class="stat-lbl">Total Spent ${year}</div>
+      <div class="stat-lbl">Total Spent ${scopeLabel}</div>
     </div>
     <div class="stat-box">
       <div class="stat-val">₹${formatINR(avgMonthly, 0)}</div>
@@ -103,6 +220,7 @@ function renderMonthlyChart(byMonth, year) {
       }]
     },
     options: {
+      animation: isPerformanceMode() ? false : { duration: 260 },
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
@@ -133,8 +251,8 @@ function renderCategoryChart(byCategory) {
   const datasets = [{
     label: 'Actual Spending',
     data: totals,
-    backgroundColor: PALETTE.slice(0, labels.length).map(c => c + 'cc'),
-    borderColor:     PALETTE.slice(0, labels.length),
+    backgroundColor: byCategory.map(r => (r.category_color || '#7c6af7') + 'cc'),
+    borderColor:     byCategory.map(r => (r.category_color || '#7c6af7')),
     borderWidth: 1.5,
     borderRadius: 4,
   }];
@@ -156,6 +274,7 @@ function renderCategoryChart(byCategory) {
     type: 'bar',
     data: { labels, datasets },
     options: {
+      animation: isPerformanceMode() ? false : { duration: 260 },
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
@@ -181,14 +300,17 @@ function renderStackedChart(monthly, byCategory) {
   if (!monthly.length) return;
 
   const catNames = [...new Set(monthly.map(r => r.category))];
-  const datasets = catNames.map((cat, i) => {
+  const colorByCategory = {};
+  byCategory.forEach(r => { colorByCategory[r.category] = r.category_color || '#7c6af7'; });
+  const datasets = catNames.map((cat) => {
     const data = Array(12).fill(0);
     monthly.filter(r => r.category === cat).forEach(r => { data[parseInt(r.month) - 1] = r.total; });
+    const color = colorByCategory[cat] || '#7c6af7';
     return {
       label: cat,
       data,
-      backgroundColor: PALETTE[i % PALETTE.length] + 'cc',
-      borderColor:     PALETTE[i % PALETTE.length],
+      backgroundColor: color + 'cc',
+      borderColor:     color,
       borderWidth: 1,
       borderRadius: 3,
     };
@@ -198,6 +320,7 @@ function renderStackedChart(monthly, byCategory) {
     type: 'bar',
     data: { labels: MONTHS, datasets },
     options: {
+      animation: isPerformanceMode() ? false : { duration: 260 },
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
@@ -219,6 +342,7 @@ function renderStackedChart(monthly, byCategory) {
 
 /* ── Init ───────────────────────────────────────────────────────────── */
 populateYears();
+document.getElementById('rep-month').value = '';
 document.getElementById('rep-apply').addEventListener('click', loadReport);
 
 // Re-render charts when theme toggles
