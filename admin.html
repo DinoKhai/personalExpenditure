@@ -104,9 +104,9 @@
   <!-- Tab: Budget Goal -->
   <div class="tab-panel" id="tab-goal">
     <div class="card goal-card">
-      <p class="text-muted text-sm" style="margin-bottom:.6rem">
-        Set monthly goals by month/year.
-      </p>
+      <div class="goal-section goal-set-section">
+      <p class="section-title goal-block-title">Set Monthly Goal</p>
+      <p class="text-muted text-sm" style="margin-bottom:.6rem">Set monthly goals by month/year.</p>
       <div class="form-row" style="margin-bottom:.5rem">
         <div class="form-group">
           <label>Goal Year</label>
@@ -139,46 +139,55 @@
         <button class="btn btn-primary" id="save-goal-btn">Save Goal</button>
         <button class="btn btn-ghost"   id="clear-goal-btn">Clear Selected Goal</button>
       </div>
+      </div>
 
-      <div class="divider"></div>
-      <p class="section-title" style="margin-bottom:.45rem">Saved Budget Goals</p>
-      <div class="form-row" style="margin-bottom:.5rem">
-        <div class="form-group">
-          <label>Filter Year</label>
-          <select id="goal-filter-year"></select>
-        </div>
-        <div class="form-group">
-          <label>Filter Month</label>
-          <select id="goal-filter-month">
-            <option value="">All Months</option>
-            <option value="1">January</option>
-            <option value="2">February</option>
-            <option value="3">March</option>
-            <option value="4">April</option>
-            <option value="5">May</option>
-            <option value="6">June</option>
-            <option value="7">July</option>
-            <option value="8">August</option>
-            <option value="9">September</option>
-            <option value="10">October</option>
-            <option value="11">November</option>
-            <option value="12">December</option>
-          </select>
+      <div class="goal-sep"></div>
+      <div class="goal-filter-section">
+        <p class="section-title goal-block-title">Saved Budget Goals</p>
+        <div class="goal-filter-block">
+          <div class="form-row" style="margin-bottom:.5rem">
+            <div class="form-group">
+              <label>Filter Year</label>
+              <select id="goal-filter-year"></select>
+            </div>
+            <div class="form-group">
+              <label>Filter Month</label>
+              <select id="goal-filter-month">
+                <option value="">All Months</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Year</th>
-              <th>Month</th>
-              <th class="amount-col">Goal (₹)</th>
-            </tr>
-          </thead>
-          <tbody id="goal-list-tbody">
-            <tr><td colspan="3"><div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">No goals yet</div></div></td></tr>
-          </tbody>
-        </table>
+
+      <div class="goal-sep"></div>
+      <div class="goal-grid-container">
+        <div class="table-wrap goal-grid-wrap">
+          <table class="goal-grid-table">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Month</th>
+                <th class="amount-col">Goal (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="goal-list-tbody">
+              <tr><td colspan="3"><div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">No goals yet</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

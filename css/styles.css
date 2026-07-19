@@ -17,6 +17,7 @@
   --card-hover:    #222838;
   --border:        transparent;
   --border-subtle: transparent;
+  --grid-sep:      rgba(154,163,191,.24);
 
   --text:          #f3f5ff;
   --text-2:        #c8cde0;
@@ -69,6 +70,7 @@ html.light {
   --card-hover:    #f4f7fc;
   --border:        transparent;
   --border-subtle: transparent;
+  --grid-sep:      rgba(71,85,105,.2);
 
   --text:          #0f172a;
   --text-2:        #1e293b;
@@ -705,6 +707,13 @@ td {
 tr:last-child td { border-bottom: none; }
 tbody tr { transition: background .1s; }
 tbody tr:hover td { background: var(--card-hover); }
+.table-wrap table thead th { box-shadow: inset 0 -1px 0 var(--grid-sep); }
+.table-wrap table tbody tr td { box-shadow: inset 0 -1px 0 var(--grid-sep); }
+.table-wrap table tbody tr:last-child td { box-shadow: none; }
+.cat-table thead th,
+.cat-table tbody td,
+.limits-table thead th,
+.limits-table tbody td { box-shadow: none !important; }
 
 .total-row td {
   font-weight: 700;
@@ -1039,7 +1048,31 @@ th.amount-col { text-align: right; }
 .compact-admin .goal-row { cursor: pointer; }
 .compact-admin .goal-row:hover td { background: var(--card-hover); }
 .compact-admin .goal-row.active td { background: var(--primary-dim); }
-.compact-admin #tab-goal .goal-card { padding: .65rem; }
+.compact-admin #tab-goal .goal-card { padding: .28rem .62rem .58rem; }
+.compact-admin #tab-goal .goal-sep {
+  height: 1px;
+  background: var(--grid-sep);
+  margin: .32rem 0;
+}
+.compact-admin #tab-goal .goal-filter-block {
+  background: color-mix(in srgb, var(--card) 92%, var(--bg-2) 8%);
+  border-radius: var(--radius-sm);
+  padding: .3rem .5rem .14rem;
+}
+.compact-admin #tab-goal .goal-filter-section {
+  background: color-mix(in srgb, var(--card) 94%, var(--bg-2) 6%);
+  border-radius: var(--radius-sm);
+  padding: .12rem .45rem .14rem;
+}
+.compact-admin #tab-goal .goal-block-title { margin: 0 0 .45rem; }
+.compact-admin #tab-goal .goal-grid-container {
+  background: color-mix(in srgb, var(--card) 70%, var(--bg-2) 30%);
+  border-radius: var(--radius);
+  padding: .42rem .62rem .26rem;
+  margin-top: .42rem;
+  box-shadow: 0 12px 26px rgba(0,0,0,.24);
+}
+.compact-admin #tab-goal .goal-grid-wrap { padding-top: .08rem; }
 .compact-admin #tab-goal .form-row {
   gap: .5rem;
   margin-bottom: .35rem !important;
@@ -1226,10 +1259,10 @@ th.amount-col { text-align: right; }
     display: flex;
     align-items: center;
     padding: .52rem .75rem;
-    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: none;
     gap: .5rem;
   }
-  .cat-table tbody tr:last-child { border-bottom: none; }
+  .cat-table tbody tr:last-child { box-shadow: none; }
   .cat-table tbody td { padding: 0; border: none; }
   .cat-table tbody td:nth-child(1) { display: none; }
   .cat-table tbody td:nth-child(2) { flex: 1; }
@@ -1242,9 +1275,9 @@ th.amount-col { text-align: right; }
     align-items: center;
     gap: .45rem;
     padding: .45rem .55rem;
-    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: none;
   }
-  .limits-table tbody tr:last-child { border-bottom: none; }
+  .limits-table tbody tr:last-child { box-shadow: none; }
   .limits-table tbody td { display: block; padding: 0; border: none; margin: 0; }
   .limits-table tbody td:nth-child(1) {
     flex: 1;
