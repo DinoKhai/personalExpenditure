@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0c0c10">
+  <title>Dashboard – FinTrack</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-icon">₹</div>
+      FinTrack
+    </a>
+    <div class="nav-links" id="nav-links">
+      <a href="index.html"     class="nav-link">Dashboard</a>
+      <a href="new-entry.html" class="nav-link">New Entry</a>
+      <a href="admin.html"     class="nav-link">Admin</a>
+      <a href="reports.html"   class="nav-link">Reports</a>
+    </div>
+    <div class="nav-right">
+      <button class="theme-toggle" id="theme-toggle" title="Toggle theme">☀️</button>
+      <button class="menu-toggle"  id="menu-toggle">&#9776;</button>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Track and review your expenditures</p>
+    </div>
+    <div class="btn-group">
+      <a href="new-entry.html" class="btn btn-primary">+ New Entry</a>
+      <button class="btn btn-ghost" id="btn-export" title="Download finance.xlsx">⬇ Export Excel</button>
+      <button class="btn btn-ghost" id="btn-import" title="Load from finance.xlsx">⬆ Import Excel</button>
+    </div>
+    <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none">
+  </div>
+
+  <!-- Filter bar -->
+  <div class="card" style="margin-bottom:1.75rem">
+    <div class="filter-grid">
+      <div class="form-group">
+        <label>Year</label>
+        <select id="f-year"></select>
+      </div>
+      <div class="form-group">
+        <label>Month</label>
+        <select id="f-month">
+          <option value="">All Months</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>From Date <span class="text-muted">(optional)</span></label>
+        <input type="date" id="f-from">
+      </div>
+      <div class="form-group">
+        <label>To Date <span class="text-muted">(optional)</span></label>
+        <input type="date" id="f-to">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="f-category"><option value="">All Categories</option></select>
+      </div>
+      <div class="form-group">
+        <label>&nbsp;</label>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-apply">Apply</button>
+          <button class="btn btn-ghost"   id="btn-clear">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary cards -->
+  <p class="section-title">Summary</p>
+  <div id="summary-grid" class="summary-grid">
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  </div>
+
+  <!-- Transactions table -->
+  <p class="section-title">Transactions</p>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th class="amount-col">Amount (₹)</th>
+            <th class="hide-sm">Notes</th>
+            <th style="text-align:center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="exp-tbody"></tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="2">Total</td>
+            <td class="amount-col" id="exp-total">—</td>
+            <td class="hide-sm"></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- Edit Modal -->
+<div class="modal" id="edit-modal">
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Edit Entry</h3>
+      <button class="modal-close" id="modal-close-btn">✕</button>
+    </div>
+    <form id="edit-form">
+      <input type="hidden" id="edit-id">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="edit-date" required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="edit-cat" required></select>
+        </div>
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <div class="input-prefix">
+            <span>₹</span>
+            <input type="text" id="edit-amount" placeholder="0" inputmode="decimal" required>
+          </div>
+          <span class="field-error" id="edit-amt-err">Amount must be ≥ ₹1</span>
+        </div>
+        <div class="form-group">
+          <label>Notes <span class="text-muted">(optional)</span></label>
+          <input type="text" id="edit-notes" placeholder="e.g. Lunch at office">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="modal-cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/db.js"></script>
+<script src="js/common.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

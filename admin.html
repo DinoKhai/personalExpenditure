@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0c0c10">
+  <title>Admin – FinTrack</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-icon">₹</div>
+      FinTrack
+    </a>
+    <div class="nav-links" id="nav-links">
+      <a href="index.html"     class="nav-link">Dashboard</a>
+      <a href="new-entry.html" class="nav-link">New Entry</a>
+      <a href="admin.html"     class="nav-link">Admin</a>
+      <a href="reports.html"   class="nav-link">Reports</a>
+    </div>
+    <div class="nav-right">
+      <button class="theme-toggle" id="theme-toggle" title="Toggle theme">☀️</button>
+      <button class="menu-toggle"  id="menu-toggle">&#9776;</button>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Admin</h1>
+      <p class="page-subtitle">Manage categories and spending limits</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tab-categories">Categories</button>
+    <button class="tab-btn"        data-tab="tab-limits">Spending Limits</button>
+  </div>
+
+  <!-- Tab: Categories -->
+  <div class="tab-panel active" id="tab-categories">
+    <div class="card">
+      <div class="d-flex gap-sm align-c" style="margin-bottom:1.25rem;flex-wrap:wrap">
+        <div class="form-group" style="flex:1;min-width:200px">
+          <label>New Category Name</label>
+          <input type="text" id="new-cat-name" placeholder="e.g. Subscriptions" maxlength="60">
+        </div>
+        <div class="form-group" style="padding-top:1.35rem">
+          <button class="btn btn-primary" id="add-cat-btn">Add Category</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Category Name</th>
+              <th style="text-align:center">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="cat-tbody">
+            <tr><td colspan="3"><div class="empty"><div class="empty-icon">🏷</div><div class="empty-text">Loading…</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Spending Limits -->
+  <div class="tab-panel" id="tab-limits">
+    <div class="card">
+      <p class="text-muted text-sm" style="margin-bottom:1.25rem">
+        Set a <strong>monthly spending limit</strong> per category. The dashboard will show a progress bar and alert when you're near or over the limit.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th class="amount-col">Monthly Limit (₹)</th>
+              <th style="text-align:center">Action</th>
+            </tr>
+          </thead>
+          <tbody id="limits-tbody">
+            <tr><td colspan="3"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Loading…</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:1.25rem;display:flex;justify-content:flex-end">
+        <button class="btn btn-primary" id="save-limits-btn">Save All Limits</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Rename Modal -->
+<div class="modal" id="rename-modal">
+  <div class="modal-backdrop" id="rename-backdrop"></div>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Rename Category</h3>
+      <button class="modal-close" id="rename-close">✕</button>
+    </div>
+    <form id="rename-form">
+      <input type="hidden" id="rename-id">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Category Name</label>
+          <input type="text" id="rename-input" required maxlength="60">
+          <span class="field-error" id="rename-err"></span>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="rename-cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Rename</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/db.js"></script>
+<script src="js/common.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
