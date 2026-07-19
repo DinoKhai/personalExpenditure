@@ -41,6 +41,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="tab-categories">Categories</button>
     <button class="tab-btn"        data-tab="tab-limits">Spending Limits</button>
+    <button class="tab-btn"        data-tab="tab-goal">Budget Goal</button>
   </div>
 
   <!-- Tab: Categories -->
@@ -95,6 +96,23 @@
       </div>
       <div style="margin-top:1.25rem;display:flex;justify-content:flex-end">
         <button class="btn btn-primary" id="save-limits-btn">Save All Limits</button>
+      </div>
+    </div>
+  </div>
+  <!-- Tab: Budget Goal -->
+  <div class="tab-panel" id="tab-goal">
+    <div class="card" style="max-width:480px">
+      <p class="text-muted text-sm" style="margin-bottom:1.5rem">
+        Set an overall monthly spending goal. The dashboard summary will show your total spending against this budget.
+      </p>
+      <div class="form-group">
+        <label>Monthly Budget Goal (₹)</label>
+        <input type="text" id="goal-amount" placeholder="e.g. 50,000" inputmode="numeric">
+        <span class="field-error" id="goal-err"></span>
+      </div>
+      <div class="d-flex gap-sm" style="margin-top:1.25rem">
+        <button class="btn btn-primary" id="save-goal-btn">Save Goal</button>
+        <button class="btn btn-ghost"   id="clear-goal-btn">Clear Goal</button>
       </div>
     </div>
   </div>

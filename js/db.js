@@ -231,6 +231,23 @@
     return { byMonth, byCategory, monthly, year };
   }
 
+  // ── General Budget Goal ────────────────────────────────────────────
+
+  const GOAL_KEY = 'fintrack_goal_v1';
+
+  function getGeneralGoal() {
+    const v = localStorage.getItem(GOAL_KEY);
+    return v ? Number(v) : null;
+  }
+
+  function setGeneralGoal(amount) {
+    if (amount === null || amount === '') {
+      localStorage.removeItem(GOAL_KEY);
+    } else {
+      localStorage.setItem(GOAL_KEY, String(Number(amount)));
+    }
+  }
+
   // ── Excel Export ───────────────────────────────────────────────────
 
   function exportToExcel() {
@@ -244,7 +261,16 @@
     add('Categories',     categories,      ['id', 'name', 'created_at']);
     add('Expenditures',   expenditures,    ['id', 'date', 'category_id', 'amount', 'notes', 'created_at']);
     add('SpendingLimits', spending_limits, ['id', 'category_id', 'monthly_limit']);
-    XLSX.writeFile(wb, 'finance.xlsx');
+    // Use Blob + object URL so mobile browsers show a "Save / Share" dialog
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob  = new Blob([wbout], { type: 'application/octet-stream' });
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement('a');
+    a.href      = url;
+    a.download  = 'finance.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
   }
 
   // ── Excel Import ───────────────────────────────────────────────────
@@ -289,6 +315,8 @@
     getSummary,
     getReports,
     exportToExcel,
-    importFromExcel
+    importFromExcel,
+    getGeneralGoal,
+    setGeneralGoal
   };
 })();

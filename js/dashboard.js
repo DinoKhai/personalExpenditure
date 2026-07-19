@@ -40,7 +40,64 @@ function getFilters() {
 
 function loadAll() {
   const filters = getFilters();
+  renderSummary(DB.getSummary(filters));
   renderTable(DB.getExpenditures(filters));
+}
+
+/* ── Summary cards ──────────────────────────────────────────────────── */
+function renderSummary(rows) {
+  const grid      = document.getElementById('summary-grid');
+  const goal      = DB.getGeneralGoal();
+  const withSpend = rows.filter(r => r.total > 0);
+  const grandTotal = rows.reduce((s, r) => s + r.total, 0);
+
+  let goalHtml = '';
+  if (goal) {
+    const pct       = Math.min(150, (grandTotal / goal) * 100);
+    const fillClass = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
+    const dotColor  = pct >= 100 ? 'var(--danger)' : pct >= 80 ? 'var(--warning)' : 'var(--success)';
+    const warnMsg   = pct >= 100
+      ? `<div class="sc-warning">Over budget by ₹${formatINR(grandTotal - goal)}</div>`
+      : '';
+    goalHtml = `
+      <div class="summary-card goal-card" style="grid-column:1/-1">
+        <div class="sc-label"><span class="sc-dot" style="background:${dotColor}"></span>Overall Budget Goal</div>
+        <div class="sc-amount">₹${formatINR(grandTotal)} <span style="font-size:.85rem;font-weight:400;color:var(--text-3)">of ₹${formatINR(goal, 0)}</span></div>
+        ${warnMsg}
+        <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${Math.min(100, pct)}%"></div></div>
+      </div>`;
+  }
+
+  if (!withSpend.length && grandTotal === 0 && !goal) {
+    grid.innerHTML = `<div class="summary-card" style="grid-column:1/-1"><div class="empty"><div class="empty-icon">💳</div><div class="empty-text">No transactions in this period</div></div></div>`;
+    return;
+  }
+
+  const cards = withSpend.map(row => {
+    let statusClass = '', progressHtml = '', dotColor = 'var(--text-3)';
+    if (row.monthly_limit) {
+      const pct       = Math.min(150, (row.total / row.monthly_limit) * 100);
+      statusClass     = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
+      dotColor        = pct >= 100 ? 'var(--danger)' : pct >= 80 ? 'var(--warning)' : 'var(--success)';
+      const warnMsg   = pct >= 100
+        ? `<div class="sc-warning">Over by ₹${formatINR(row.total - row.monthly_limit)}</div>`
+        : '';
+      progressHtml = `
+        <div class="sc-limit">₹${formatINR(row.monthly_limit, 0)} limit · ${Math.round((row.total / row.monthly_limit) * 100)}%</div>
+        ${warnMsg}
+        <div class="progress-bar"><div class="progress-fill ${statusClass}" style="width:${Math.min(100, pct)}%"></div></div>`;
+    } else {
+      progressHtml = `<div class="sc-limit">No limit set</div>`;
+    }
+    return `
+      <div class="summary-card ${statusClass}">
+        <div class="sc-label"><span class="sc-dot" style="background:${dotColor}"></span>${row.category_name}</div>
+        <div class="sc-amount">₹${formatINR(row.total)}</div>
+        ${progressHtml}
+      </div>`;
+  }).join('');
+
+  grid.innerHTML = goalHtml + cards;
 }
 
 /* ── Transactions table ─────────────────────────────────────────────── */
@@ -136,6 +193,14 @@ document.getElementById('modal-cancel').addEventListener('click', closeModal);
 document.getElementById('modal-backdrop').addEventListener('click', closeModal);
 setupAmountInput(document.getElementById('edit-amount'));
 
+/* ── Summary toggle ─────────────────────────────────────────────────── */
+document.getElementById('btn-toggle-summary').addEventListener('click', () => {
+  const panel = document.getElementById('summary-panel');
+  const btn   = document.getElementById('btn-toggle-summary');
+  const isHidden = panel.classList.toggle('hidden');
+  btn.classList.toggle('open', !isHidden);
+});
+
 /* ── Filter toggle ──────────────────────────────────────────────────── */
 document.getElementById('btn-toggle-filters').addEventListener('click', () => {
   const bar = document.getElementById('filter-bar');
@@ -159,7 +224,7 @@ document.getElementById('btn-clear').addEventListener('click', () => {
 document.getElementById('btn-export').addEventListener('click', () => {
   try {
     DB.exportToExcel();
-    showToast('Exported to finance.xlsx ✅');
+    showToast('Exported finance.xlsx ✅');
   } catch (e) {
     showToast('Export failed: ' + e.message, 'error');
   }

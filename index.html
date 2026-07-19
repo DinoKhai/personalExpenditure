@@ -39,8 +39,8 @@
     <div class="btn-group">
       <a href="new-entry.html" class="btn btn-primary">+ New Entry</a>
       <button class="btn btn-ghost" id="btn-toggle-filters">Filters</button>
-      <button class="btn btn-ghost" id="btn-export" title="Download finance.xlsx">⬇ Excel</button>
-      <button class="btn btn-ghost" id="btn-import" title="Load from finance.xlsx">⬆ Excel</button>
+      <button class="btn btn-ghost" id="btn-export">Export</button>
+      <button class="btn btn-ghost" id="btn-import">Import</button>
     </div>
     <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none">
   </div>
@@ -90,6 +90,16 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Summary (collapsed by default) -->
+  <div class="d-flex align-c justify-b" style="margin-bottom:.625rem">
+    <button class="section-toggle-btn" id="btn-toggle-summary">
+      <span class="toggle-arrow">▶</span> Summary
+    </button>
+  </div>
+  <div class="collapsible-panel hidden" id="summary-panel" style="margin-bottom:1.75rem">
+    <div id="summary-grid" class="summary-grid"></div>
   </div>
 
   <!-- Transactions table -->

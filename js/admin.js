@@ -183,6 +183,47 @@ document.getElementById('save-limits-btn').addEventListener('click', () => {
   loadLimits();
 });
 
+/* ── Budget Goal ─────────────────────────────────────────────────────── */
+function loadGoal() {
+  const goal = DB.getGeneralGoal();
+  const inp  = document.getElementById('goal-amount');
+  inp.value = goal
+    ? parseFloat(goal).toLocaleString('en-IN', { maximumFractionDigits: 2 })
+    : '';
+}
+
+function setupGoalInput() {
+  const inp = document.getElementById('goal-amount');
+  setupAmountInput(inp);
+}
+
+document.getElementById('save-goal-btn').addEventListener('click', () => {
+  const inp = document.getElementById('goal-amount');
+  const err = document.getElementById('goal-err');
+  err.textContent = '';
+  err.classList.remove('visible');
+
+  const raw = inp.value.replace(/[^0-9.]/g, '');
+  const val = parseFloat(raw);
+  if (!raw || isNaN(val) || val < 1) {
+    err.textContent = 'Enter a valid amount (≥ ₹1)';
+    err.classList.add('visible');
+    return;
+  }
+  DB.setGeneralGoal(val);
+  showToast('Budget goal saved ✅');
+  loadGoal();
+});
+
+document.getElementById('clear-goal-btn').addEventListener('click', () => {
+  DB.setGeneralGoal(null);
+  document.getElementById('goal-amount').value = '';
+  document.getElementById('goal-err').classList.remove('visible');
+  showToast('Budget goal cleared');
+});
+
 /* ── Init ──────────────────────────────────────────────────────────── */
 loadCategories();
 loadLimits();
+loadGoal();
+setupGoalInput();
