@@ -45,28 +45,42 @@ function loadAll() {
 
 /* ── Transactions table ─────────────────────────────────────────────── */
 function renderTable(rows) {
-  const tbody  = document.getElementById('exp-tbody');
+  const tbody   = document.getElementById('exp-tbody');
   const totalEl = document.getElementById('exp-total');
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">No transactions found for this filter</div></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">No transactions found for this filter</div></div></td></tr>`;
     totalEl.textContent = '₹0.00';
     return;
   }
 
   const total = rows.reduce((s, r) => s + r.amount, 0);
   tbody.innerHTML = rows.map(r => `
-    <tr>
-      <td style="white-space:nowrap">${formatDate(r.date)}</td>
-      <td><span class="badge badge-cat">${r.category_name}</span></td>
-      <td class="amount-col">₹${formatINR(r.amount)}</td>
-      <td class="hide-sm" style="color:var(--text-3);font-size:.875rem">${r.notes || '—'}</td>
-      <td style="text-align:center;white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="openEdit(${r.id})">Edit</button>
-        <button class="btn btn-danger-ghost btn-sm" onclick="deleteEntry(${r.id})">Delete</button>
+    <tr class="tx-row" onclick="toggleTxRow(this)" data-id="${r.id}">
+      <td class="tx-date">${formatDate(r.date)}</td>
+      <td class="tx-cat"><span class="badge badge-cat">${r.category_name}</span></td>
+      <td class="tx-amt amount-col">₹${formatINR(r.amount)}</td>
+    </tr>
+    <tr class="tx-expand" id="txe-${r.id}">
+      <td colspan="3">
+        <div class="tx-expand-inner">
+          <span class="tx-notes">${r.notes ? `📝 ${r.notes}` : '<span style="color:var(--text-3)">No notes</span>'}</span>
+          <div class="btn-group">
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEdit(${r.id})">Edit</button>
+            <button class="btn btn-danger-ghost btn-sm" onclick="event.stopPropagation();deleteEntry(${r.id})">Delete</button>
+          </div>
+        </div>
       </td>
     </tr>`).join('');
   totalEl.textContent = '₹' + formatINR(total);
+}
+
+/* ── Row expand/collapse ─────────────────────────────────────────────── */
+function toggleTxRow(row) {
+  const id     = row.dataset.id;
+  const detail = document.getElementById('txe-' + id);
+  const isOpen = detail.classList.toggle('open');
+  row.classList.toggle('tx-row-open', isOpen);
 }
 
 /* ── Delete ─────────────────────────────────────────────────────────── */

@@ -628,45 +628,37 @@ th.amount-col { text-align: right; }
 /* ── Filter collapse ─────────────────────────────────────────── */
 .filter-card.hidden { display: none; }
 
+/* ── Compact expandable transaction rows ─────────────────────── */
+.tx-row {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.tx-row td { padding: .45rem 1rem; }
+.tx-row:hover td { background: var(--card-hover); }
+.tx-row-open td { background: var(--primary-dim) !important; }
+
+.tx-date  { white-space: nowrap; font-size: .8rem; color: var(--text-3); width: 6.5rem; }
+.tx-cat   { }
+.tx-amt   { font-weight: 700; white-space: nowrap; }
+
+/* Expand row — hidden by default */
+.tx-expand td { padding: 0; border: none; }
+.tx-expand-inner {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .4rem 1rem .5rem 1rem;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+.tx-expand.open .tx-expand-inner { display: flex; }
+.tx-notes { font-size: .78rem; color: var(--text-3); flex: 1; min-width: 0; }
+
 /* ── Mobile card-style tables (≤ 640px = iPhone 15 range) ────── */
 @media (max-width: 640px) {
-
-  /* ── Transaction table ───────────────────────────── */
-  .tx-table thead { display: none; }
-
-  .tx-table tfoot tr { display: flex; align-items: center; }
-  .tx-table tfoot td { padding: .625rem 1rem; }
-  .tx-table tfoot td:nth-child(1) { flex: 1; }
-  .tx-table tfoot td:nth-child(3),
-  .tx-table tfoot td:nth-child(4) { display: none; }
-
-  .tx-table tbody tr {
-    display: block;
-    padding: .75rem 1rem;
-    border-bottom: 1px solid var(--border-subtle);
-  }
-  .tx-table tbody tr:last-child { border-bottom: none; }
-  .tx-table tbody td { display: block; padding: 0; border: none; }
-  .tx-table tbody td:nth-child(1) { /* Date */
-    font-size: .72rem;
-    color: var(--text-3);
-    margin-bottom: 5px;
-  }
-  .tx-table tbody td:nth-child(2) { /* Category */
-    margin-bottom: 4px;
-  }
-  .tx-table tbody td:nth-child(3) { /* Amount */
-    font-size: 1.05rem;
-    font-weight: 700;
-    text-align: left;
-    margin-bottom: .5rem;
-  }
-  .tx-table tbody td:nth-child(4) { display: none; }
-  .tx-table tbody td:nth-child(5) { /* Actions */
-    display: flex;
-    gap: .375rem;
-    justify-content: flex-end;
-  }
 
   /* ── Admin categories table ──────────────────────── */
   .cat-table thead { display: none; }
@@ -679,7 +671,7 @@ th.amount-col { text-align: right; }
   }
   .cat-table tbody tr:last-child { border-bottom: none; }
   .cat-table tbody td { padding: 0; border: none; }
-  .cat-table tbody td:nth-child(1) { display: none; } /* # */
+  .cat-table tbody td:nth-child(1) { display: none; }
   .cat-table tbody td:nth-child(2) { flex: 1; }
   .cat-table tbody td:nth-child(3) { flex-shrink: 0; }
 
@@ -693,7 +685,6 @@ th.amount-col { text-align: right; }
   .limits-table tbody tr:last-child { border-bottom: none; }
   .limits-table tbody td { display: block; padding: 0; border: none; margin-bottom: .5rem; }
   .limits-table tbody td:nth-child(1) { font-weight: 600; }
-  .limits-table tbody td:nth-child(2) { }
   .limits-table tbody td:nth-child(3) { margin-bottom: 0; text-align: right; }
   .limits-table .input-prefix { max-width: 100% !important; }
 }
