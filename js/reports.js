@@ -15,6 +15,9 @@ function getThemeColors() {
     text3:  s.getPropertyValue('--text-3').trim() || '#606078',
     border: s.getPropertyValue('--border').trim() || '#2a2a36',
     card:   s.getPropertyValue('--card').trim()   || '#17171d',
+    primary: s.getPropertyValue('--primary').trim() || '#f97316',
+    accent2: s.getPropertyValue('--accent-2').trim() || '#22c55e',
+    accent3: s.getPropertyValue('--accent-3').trim() || '#f59e0b',
   };
 }
 
@@ -65,6 +68,27 @@ function escHtml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function alpha(hex, a) {
+  const m = String(hex || '').trim().match(/^#([0-9a-fA-F]{6})$/);
+  if (!m) return `rgba(0,0,0,${a})`;
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function contrastText(hex) {
+  const m = String(hex || '').trim().match(/^#([0-9a-fA-F]{6})$/);
+  if (!m) return '#ffffff';
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return yiq >= 150 ? '#111827' : '#ffffff';
+}
+
 function median(nums) {
   if (!nums.length) return 0;
   const sorted = [...nums].sort((a, b) => a - b);
@@ -94,6 +118,16 @@ function renderTransactionSummary(rows, data, year, month = '') {
   const top3Total = data.byCategory.slice(0, 3).reduce((s, r) => s + Number(r.total || 0), 0);
   const top3Pct = total ? Math.round((top3Total / total) * 100) : 0;
   const top3BySpend = data.byCategory.slice(0, 3);
+  const categoryColorMap = {};
+  data.byCategory.forEach(r => { categoryColorMap[r.category] = r.category_color || '#f97316'; });
+  rows.forEach(r => {
+    if (!categoryColorMap[r.category_name] && r.category_color) categoryColorMap[r.category_name] = r.category_color;
+  });
+  const catLabel = (name) => {
+    const safe = escHtml(name);
+    const color = categoryColorMap[name] || '#f97316';
+    return `<strong style="color:${color}">${safe}</strong>`;
+  };
 
   const countMap = {};
   rows.forEach(r => {
@@ -131,7 +165,7 @@ function renderTransactionSummary(rows, data, year, month = '') {
     .map(r => r.category)
     .slice(0, 3);
   const breachLine = breaches.length
-    ? `Limit breaches: ${breaches.map(name => `<strong>${escHtml(name)}</strong>`).join(', ')}${data.byCategory.filter(r => r.monthly_limit && Number(r.total) > Number(r.monthly_limit) * breachBaseMultiplier).length > 3 ? ' +' : ''}.`
+    ? `Limit breaches: ${breaches.map(name => catLabel(name)).join(', ')}${data.byCategory.filter(r => r.monthly_limit && Number(r.total) > Number(r.monthly_limit) * breachBaseMultiplier).length > 3 ? ' +' : ''}.`
     : 'Limit breaches: None.';
 
   let prevRows = [];
@@ -161,10 +195,10 @@ function renderTransactionSummary(rows, data, year, month = '') {
     <ul>
       <li>${rows.length} transaction${rows.length === 1 ? '' : 's'} across ${activeDays} active day${activeDays === 1 ? '' : 's'}.</li>
       <li>Total spend: <strong>₹${formatINR(total, 0)}</strong> · Avg: <strong>₹${formatINR(avg, 0)}</strong> · Median: <strong>₹${formatINR(med, 0)}</strong>.</li>
-      ${topCat ? `<li>Top category: <strong>${escHtml(topCat.category)}</strong> (${topCatPct}% of total, <strong>₹${formatINR(topCat.total, 0)}</strong>).</li>` : ''}
-      <li>Top 3 by spend: ${top3BySpend.map(r => `<strong>${escHtml(r.category)}</strong> (<strong>₹${formatINR(r.total, 0)}</strong>)`).join(', ')} (${top3Pct}% of total).</li>
-      <li>Top categories by transaction count: ${top3ByCount.map(([name, cnt]) => `<strong>${escHtml(name)}</strong> (${cnt})`).join(', ')}.</li>
-      <li>Largest transaction: <strong>₹${formatINR(maxTx.amount, 0)}</strong> on ${formatDate(maxTx.date)} (<strong>${escHtml(maxTx.category_name)}</strong>).</li>
+      ${topCat ? `<li>Top category: ${catLabel(topCat.category)} (${topCatPct}% of total, <strong>₹${formatINR(topCat.total, 0)}</strong>).</li>` : ''}
+      <li>Top 3 by spend: ${top3BySpend.map(r => `${catLabel(r.category)} (<strong>₹${formatINR(r.total, 0)}</strong>)`).join(', ')} (${top3Pct}% of total).</li>
+      <li>Top categories by transaction count: ${top3ByCount.map(([name, cnt]) => `${catLabel(name)} (${cnt})`).join(', ')}.</li>
+      <li>Largest transaction: <strong>₹${formatINR(maxTx.amount, 0)}</strong> on ${formatDate(maxTx.date)} (${catLabel(maxTx.category_name)}).</li>
       <li>Highest spending day: ${formatDate(peakDay)} (<strong>₹${formatINR(peakDayTotal, 0)}</strong>).</li>
       <li>Weekend vs weekday: <strong>₹${formatINR(weekendTotal, 0)}</strong> (${weekendPct}%) vs <strong>₹${formatINR(weekdayTotal, 0)}</strong> (${100 - weekendPct}%).</li>
       <li>${goalLine}</li>
@@ -175,28 +209,40 @@ function renderTransactionSummary(rows, data, year, month = '') {
 
 /* ── KPI Stats ──────────────────────────────────────────────────────── */
 function renderStats(data, year, month = '') {
+  const t = getThemeColors();
+  const isLight = document.documentElement.classList.contains('light');
   const total      = data.byMonth.reduce((s, r) => s + r.total, 0);
   const avgMonthly = data.byMonth.length ? total / data.byMonth.length : 0;
   const topCat     = data.byCategory[0];
   const scopeLabel = month ? `${MONTHS[Number(month) - 1]} ${year}` : year;
+  const totalBg = t.primary;
+  const avgBg = t.accent2;
+  const activeBg = t.accent3;
+  const topBg = topCat ? (topCat.category_color || t.accent3) : t.accent3;
+  const totalFg = isLight ? totalBg : alpha(totalBg, .95);
+  const avgFg = isLight ? avgBg : alpha(avgBg, .95);
+  const activeFg = isLight ? activeBg : alpha(activeBg, .95);
+  const topFg = isLight ? topBg : alpha(topBg, .95);
+  const kpiLabelColor = isLight ? 'rgba(15,23,42,.82)' : 'rgba(243,245,255,.86)';
+  const kpiBg = (color) => alpha(color, isLight ? .24 : .16);
 
   document.getElementById('stat-grid').innerHTML = `
-    <div class="stat-box">
-      <div class="stat-val">₹${formatINR(total, 0)}</div>
-      <div class="stat-lbl">Total Spent ${scopeLabel}</div>
+    <div class="stat-box" style="border:none;background:${kpiBg(totalBg)};">
+      <div class="stat-val" style="color:${totalFg}">₹${formatINR(total, 0)}</div>
+      <div class="stat-lbl" style="color:${kpiLabelColor};">Total Spent ${scopeLabel}</div>
     </div>
-    <div class="stat-box">
-      <div class="stat-val">₹${formatINR(avgMonthly, 0)}</div>
-      <div class="stat-lbl">Avg / Active Month</div>
+    <div class="stat-box" style="border:none;background:${kpiBg(avgBg)};">
+      <div class="stat-val" style="color:${avgFg}">₹${formatINR(avgMonthly, 0)}</div>
+      <div class="stat-lbl" style="color:${kpiLabelColor};">Avg / Active Month</div>
     </div>
-    <div class="stat-box">
-      <div class="stat-val">${data.byMonth.length}</div>
-      <div class="stat-lbl">Active Months</div>
+    <div class="stat-box" style="border:none;background:${kpiBg(activeBg)};">
+      <div class="stat-val" style="color:${activeFg}">${data.byMonth.length}</div>
+      <div class="stat-lbl" style="color:${kpiLabelColor};">Active Months</div>
     </div>
     ${topCat ? `
-    <div class="stat-box">
-      <div class="stat-val" style="font-size:1.1rem">${topCat.category}</div>
-      <div class="stat-lbl">Top Category</div>
+    <div class="stat-box" style="border:none;background:${kpiBg(topBg)};">
+      <div class="stat-val" style="font-size:1.1rem;color:${topFg}">${topCat.category}</div>
+      <div class="stat-lbl" style="color:${kpiLabelColor};">Top Category</div>
     </div>` : ''}`;
 }
 

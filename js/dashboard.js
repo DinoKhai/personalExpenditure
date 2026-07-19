@@ -91,8 +91,8 @@ function renderSummary(rows) {
   let goalHtml = '';
   if (goal) {
     const pct       = Math.min(150, (grandTotal / goal) * 100);
-    const fillClass = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
-    const dotColor  = pct >= 100 ? 'var(--danger)' : pct >= 80 ? 'var(--warning)' : 'var(--success)';
+    const fillClass = pct > 95 ? 'over' : pct >= 60 ? 'warn' : 'ok';
+    const dotColor  = pct > 95 ? 'var(--danger)' : pct >= 60 ? 'var(--warning)' : 'var(--success)';
     const subText   = pct >= 100
       ? `Over by ₹${formatINR(grandTotal - goal)}`
       : `${Math.round((grandTotal / goal) * 100)}% of goal used`;
@@ -102,7 +102,7 @@ function renderSummary(rows) {
           <div class="sl-label"><span class="sl-dot" style="background:${dotColor}"></span>Overall Goal (${goalLabel})</div>
           <div class="sl-amount">₹${formatINR(grandTotal)} / ₹${formatINR(goal, 0)}</div>
         </div>
-        <div class="sl-sub ${pct >= 100 ? 'warn' : ''}">${subText}</div>
+        <div class="sl-sub ${pct > 95 ? 'warn' : ''}">${subText}</div>
         <div class="progress-bar compact"><div class="progress-fill ${fillClass}" style="width:${Math.min(100, pct)}%"></div></div>
       </div>`;
   }
@@ -119,13 +119,13 @@ function renderSummary(rows) {
     if (row.monthly_limit) {
       let statusClass = '', progressHtml = '', dotColor = 'var(--text-3)', subText = '';
       const pct       = Math.min(150, (row.total / row.monthly_limit) * 100);
-      statusClass     = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
-      dotColor        = pct >= 100 ? 'var(--danger)' : pct >= 80 ? 'var(--warning)' : 'var(--success)';
+      statusClass     = pct > 95 ? 'over' : pct >= 60 ? 'warn' : 'ok';
+      dotColor        = pct > 95 ? 'var(--danger)' : pct >= 60 ? 'var(--warning)' : 'var(--success)';
       subText         = pct >= 100
         ? `Over by ₹${formatINR(row.total - row.monthly_limit)}`
         : `Limit ₹${formatINR(row.monthly_limit, 0)} · ${Math.round((row.total / row.monthly_limit) * 100)}%`;
       progressHtml = `
-        <div class="sl-sub ${pct >= 100 ? 'warn' : ''}">${subText}</div>
+        <div class="sl-sub ${pct > 95 ? 'warn' : ''}">${subText}</div>
         <div class="progress-bar compact"><div class="progress-fill ${statusClass}" style="width:${Math.min(100, pct)}%"></div></div>`;
       limitCards.push(`
       <div class="summary-line ${statusClass}">
