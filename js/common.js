@@ -53,6 +53,29 @@ function togglePerformanceMode() {
   applyPerformanceMode(next);
 }
 
+function setupFileLinkedBadge() {
+  const navRight = document.querySelector('.nav-right');
+  if (!navRight) return;
+  const badge = document.createElement('span');
+  badge.id = 'file-linked-badge';
+  badge.className = 'file-linked-badge';
+  badge.textContent = 'File Linked';
+  navRight.insertBefore(badge, navRight.firstChild);
+
+  const updateBadge = () => {
+    if (!window.DB || typeof window.DB.getPersistentExcelStatus !== 'function') {
+      badge.style.display = 'none';
+      return;
+    }
+    const status = window.DB.getPersistentExcelStatus();
+    const isOn = !!status.linked;
+    badge.style.display = isOn ? 'inline-flex' : 'none';
+  };
+
+  updateBadge();
+  window.addEventListener('fintrack:persistent-excel-status', updateBadge);
+}
+
 /* ── INR formatting ─────────────────────────────────────────────────── */
 function formatINR(amount, decimals = 2) {
   const n = parseFloat(amount) || 0;
@@ -69,11 +92,36 @@ function formatDate(dateStr) {
   return `${parseInt(d)} ${months[parseInt(m) - 1]} ${y}`;
 }
 
+function getISTNowParts() {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  const out = {};
+  formatter.formatToParts(new Date()).forEach(part => {
+    if (part.type !== 'literal') out[part.type] = part.value;
+  });
+  return {
+    year: Number(out.year),
+    month: Number(out.month),
+    day: Number(out.day),
+    hour: Number(out.hour),
+    minute: Number(out.minute),
+    second: Number(out.second)
+  };
+}
+
 function todayISO() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const now = getISTNowParts();
+  const y = now.year;
+  const m = String(now.month).padStart(2, '0');
+  const day = String(now.day).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
 
@@ -129,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
   const perfBtn = document.getElementById('perf-toggle');
   if (perfBtn) perfBtn.addEventListener('click', togglePerformanceMode);
+  setupFileLinkedBadge();
 
   const toggle   = document.getElementById('menu-toggle');
   const navLinks = document.getElementById('nav-links');
@@ -171,4 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.AppPrefs = {
   isPerformanceMode
+};
+
+window.AppTime = {
+  getISTNowParts
 };

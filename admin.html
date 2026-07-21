@@ -21,6 +21,7 @@
       <a href="new-entry.html" class="nav-link">New Entry</a>
       <a href="admin.html"     class="nav-link">Admin</a>
       <a href="reports.html"   class="nav-link">Reports</a>
+      <a href="income-log.html" class="nav-link">Income Log</a>
     </div>
     <div class="nav-right">
       <button class="perf-toggle" id="perf-toggle" title="Toggle performance mode">⚡</button>
@@ -34,7 +35,7 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Admin</h1>
-      <p class="page-subtitle">Manage categories and spending limits</p>
+      <p class="page-subtitle">Manage categories, limits, goals, and cash flow</p>
     </div>
   </div>
 
@@ -43,6 +44,8 @@
     <button class="tab-btn active" data-tab="tab-categories">Categories</button>
     <button class="tab-btn"        data-tab="tab-limits">Spending Limits</button>
     <button class="tab-btn"        data-tab="tab-goal">Budget Goal</button>
+    <button class="tab-btn"        data-tab="tab-source">Excel Source</button>
+    <button class="tab-btn"        data-tab="tab-cashflow">Cash Flow</button>
   </div>
 
   <!-- Tab: Categories -->
@@ -95,7 +98,7 @@
           </tbody>
         </table>
       </div>
-      <div style="margin-top:.8rem;display:flex;justify-content:flex-end">
+      <div class="section-actions" style="margin-top:.8rem">
         <button class="btn btn-primary" id="save-limits-btn">Save All Limits</button>
       </div>
     </div>
@@ -135,7 +138,7 @@
         <input type="text" id="goal-amount" placeholder="e.g. 50,000" inputmode="numeric">
         <span class="field-error" id="goal-err"></span>
       </div>
-      <div class="d-flex gap-sm" style="margin-top:.75rem">
+      <div class="section-actions" style="margin-top:.75rem">
         <button class="btn btn-primary" id="save-goal-btn">Save Goal</button>
         <button class="btn btn-ghost"   id="clear-goal-btn">Clear Selected Goal</button>
       </div>
@@ -188,6 +191,172 @@
             </tbody>
           </table>
         </div>
+        <div class="pager-host" id="goal-pager"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Excel Source -->
+  <div class="tab-panel" id="tab-source">
+    <div class="card cash-card">
+      <div class="goal-section">
+        <p class="section-title goal-block-title">Persistent Excel Data Source</p>
+        <p class="text-muted text-sm" style="margin-bottom:.6rem">Load one Excel file and continue CRUD directly against that file while keeping local memory behavior.</p>
+        <div class="section-actions" style="margin-bottom:.45rem">
+          <button class="btn btn-primary" id="persistent-open-btn">Load Excel Source</button>
+          <button class="btn btn-ghost" id="persistent-save-btn">Save To Loaded File</button>
+          <button class="btn btn-danger-ghost" id="persistent-disconnect-btn">Stop Using File</button>
+        </div>
+        <p class="text-sm text-muted" id="persistent-status-text">Persistent source not connected.</p>
+        <p class="text-sm text-muted" id="persistent-status-hint" style="margin-top:.2rem"></p>
+        <section class="source-filter-section">
+          <div class="filter-card compact-filter persistent-log-filter-card">
+            <div class="persistent-log-filter-row">
+              <div class="form-group">
+                <label>From Date</label>
+                <input type="date" id="persistent-log-from-date">
+              </div>
+              <div class="persistent-log-time-pair">
+                <div class="form-group">
+                  <label>hr</label>
+                  <select id="persistent-log-from-hour" class="log-time-select">
+                    <option value="">--</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>mins</label>
+                  <select id="persistent-log-from-minute" class="log-time-select">
+                    <option value="">--</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="persistent-log-filter-row">
+              <div class="form-group">
+                <label>To Date</label>
+                <input type="date" id="persistent-log-to-date">
+              </div>
+              <div class="persistent-log-time-pair">
+                <div class="form-group">
+                  <label>hr</label>
+                  <select id="persistent-log-to-hour" class="log-time-select">
+                    <option value="">--</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>mins</label>
+                  <select id="persistent-log-to-minute" class="log-time-select">
+                    <option value="">--</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="persistent-log-filter-row persistent-log-filter-row-search">
+              <div class="form-group persistent-log-search-group">
+                <label>Search</label>
+                <input type="text" id="persistent-log-search" placeholder="Search logs">
+              </div>
+            </div>
+            <div class="persistent-log-filter-row persistent-log-filter-actions-row">
+              <div class="form-group persistent-log-actions-group">
+                <div class="btn-group section-actions">
+                  <button class="btn btn-primary btn-sm" id="persistent-log-apply-btn">Apply</button>
+                  <button class="btn btn-ghost btn-sm" id="persistent-log-reset-btn">Reset</button>
+                  <button class="btn btn-danger-ghost btn-sm" id="persistent-log-clear-btn">Clear Logs</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <div class="source-log-section" style="margin-top:.75rem">
+          <p class="section-title goal-block-title" style="margin:0 0 .45rem">Log Activities</p>
+          <div class="source-log-card">
+            <div id="persistent-log">
+              <div class="text-muted text-sm">No file activity yet.</div>
+            </div>
+          </div>
+          <div class="pager-host" id="persistent-log-pager"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Cash Flow -->
+  <div class="tab-panel" id="tab-cashflow">
+    <div class="card cash-card">
+      <div class="goal-section">
+        <p class="section-title goal-block-title">Opening Cash</p>
+        <p class="text-muted text-sm" style="margin-bottom:.6rem">Set your starting balance and date. Future balances continue automatically.</p>
+        <div class="form-row" style="margin-bottom:.5rem">
+          <div class="form-group">
+            <label>Effective Date</label>
+            <input type="date" id="cash-opening-date">
+          </div>
+          <div class="form-group">
+            <label>Opening Cash (₹)</label>
+            <input type="text" id="cash-opening-amount" placeholder="e.g. 50,000" inputmode="numeric">
+            <span class="field-error" id="cash-opening-err"></span>
+          </div>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-primary" id="save-opening-cash-btn">Save Opening Cash</button>
+        </div>
+      </div>
+
+      <div class="goal-sep"></div>
+
+      <div class="goal-section">
+        <p class="section-title goal-block-title">Record Monthly Salary</p>
+        <p class="text-muted text-sm" style="margin-bottom:.6rem">Enter salary received for each month. If that month already exists, it will be updated.</p>
+        <div class="form-row" style="margin-bottom:.5rem">
+          <div class="form-group">
+            <label>Year</label>
+            <select id="salary-year"></select>
+          </div>
+          <div class="form-group">
+            <label>Month</label>
+            <select id="salary-month">
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Received Date</label>
+            <input type="date" id="salary-received-date">
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:.5rem">
+          <div class="form-group">
+            <label>Salary Amount (₹)</label>
+            <input type="text" id="salary-amount" placeholder="e.g. 85,000" inputmode="numeric">
+            <span class="field-error" id="salary-err"></span>
+          </div>
+          <div class="form-group">
+            <label>Notes <span class="text-muted">(optional)</span></label>
+            <input type="text" id="salary-notes" placeholder="e.g. Includes incentives">
+          </div>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-primary" id="save-salary-btn">Save Monthly Salary</button>
+        </div>
+      </div>
+
+      <div class="goal-sep"></div>
+
+      <div class="goal-grid-container">
+        <p class="section-title goal-block-title">Monthly Income Log</p>
+        <p class="text-muted text-sm" style="margin-bottom:.5rem">Open the dedicated monthly log screen for month-wise income, transactions, and drill-down.</p>
+        <a href="income-log.html" class="btn btn-ghost">Open Income Log</a>
       </div>
     </div>
   </div>
@@ -219,6 +388,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="js/db.js"></script>
 <script src="js/common.js"></script>
 <script src="js/admin.js"></script>

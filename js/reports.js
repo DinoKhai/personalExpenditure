@@ -3,6 +3,12 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 
 let charts = {};
 
+function getNowParts() {
+  if (window.AppTime && typeof window.AppTime.getISTNowParts === 'function') return window.AppTime.getISTNowParts();
+  const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() };
+}
+
 function isPerformanceMode() {
   return !!(window.AppPrefs && typeof window.AppPrefs.isPerformanceMode === 'function' && window.AppPrefs.isPerformanceMode());
 }
@@ -41,7 +47,7 @@ function destroyChart(id) {
 /* ── Year selector ──────────────────────────────────────────────────── */
 function populateYears() {
   const sel = document.getElementById('rep-year');
-  const now = new Date().getFullYear();
+  const now = getNowParts().year;
   for (let y = now + 1; y >= now - 5; y--) {
     sel.innerHTML += `<option value="${y}" ${y === now ? 'selected' : ''}>${y}</option>`;
   }

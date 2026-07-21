@@ -3,9 +3,22 @@ const params = new URLSearchParams(window.location.search);
 const editId = params.get('edit');
 const isEdit = !!editId;
 
-function init() {
-  document.getElementById('field-date').value = todayISO();
+function getOthersCategoryValue() {
+  const sel = document.getElementById('field-cat');
+  const exact = Array.from(sel.options).find(o => o.textContent.trim().toLowerCase() === 'others');
+  if (exact) return exact.value;
+  const partial = Array.from(sel.options).find(o => o.textContent.trim().toLowerCase().startsWith('other'));
+  return partial ? partial.value : '';
+}
 
+function syncCategoryForType() {
+  const type = document.getElementById('field-type').value;
+  if (type !== 'credit') return;
+  const others = getOthersCategoryValue();
+  if (others) document.getElementById('field-cat').value = others;
+}
+
+function init() {
   const cats = DB.getAllCategories();
   document.getElementById('field-cat').innerHTML =
     '<option value="">— Select category —</option>' +
@@ -29,6 +42,8 @@ function loadEntry() {
   document.getElementById('field-amount').value =
     parseFloat(entry.amount).toLocaleString('en-IN', { maximumFractionDigits: 2 });
   document.getElementById('field-notes').value  = entry.notes || '';
+  document.getElementById('field-type').value   = entry.type || 'debit';
+  syncCategoryForType();
 }
 
 document.getElementById('entry-form').addEventListener('submit', e => {
@@ -37,6 +52,7 @@ document.getElementById('entry-form').addEventListener('submit', e => {
 
   const date  = document.getElementById('field-date').value;
   const catId = document.getElementById('field-cat').value;
+  const txnType = document.getElementById('field-type').value;
   const amt   = getRawAmount(document.getElementById('field-amount'));
   const notes = document.getElementById('field-notes').value.trim();
 
@@ -56,10 +72,10 @@ document.getElementById('entry-form').addEventListener('submit', e => {
 
   try {
     if (isEdit) {
-      DB.updateExpenditure(editId, { date, category_id: catId, amount: amt, notes });
+      DB.updateExpenditure(editId, { date, category_id: catId, amount: amt, notes, type: txnType });
       showToast('Entry updated ✅');
     } else {
-      DB.insertExpenditure({ date, category_id: catId, amount: amt, notes });
+      DB.insertExpenditure({ date, category_id: catId, amount: amt, notes, type: txnType });
       showToast('Entry saved ✅');
       resetForm();
     }
@@ -72,10 +88,11 @@ document.getElementById('entry-form').addEventListener('submit', e => {
 });
 
 function resetForm() {
-  document.getElementById('field-date').value   = todayISO();
+  document.getElementById('field-date').value   = '';
   document.getElementById('field-cat').value    = '';
   document.getElementById('field-amount').value = '';
   document.getElementById('field-notes').value  = '';
+  document.getElementById('field-type').value   = 'debit';
   document.getElementById('err-cat').classList.remove('visible');
   document.getElementById('err-amount').classList.remove('visible');
   document.getElementById('submit-btn').disabled    = false;
@@ -87,5 +104,6 @@ document.getElementById('field-cat').addEventListener('change', () =>
   document.getElementById('err-cat').classList.remove('visible'));
 document.getElementById('field-amount').addEventListener('input', () =>
   document.getElementById('err-amount').classList.remove('visible'));
+document.getElementById('field-type').addEventListener('change', syncCategoryForType);
 
 init();

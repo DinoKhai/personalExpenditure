@@ -1,10 +1,18 @@
 /* dashboard.js */
 let allCategories = [];
 let activeMonthKey = '';
+const txPager = { page: 1, size: 10 };
+
+function getNowParts() {
+  if (window.AppTime && typeof window.AppTime.getISTNowParts === 'function') return window.AppTime.getISTNowParts();
+  const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() };
+}
 
 function init() {
   populateYears();
   setDefaultFilters();
+  applyFiltersFromQuery();
   activeMonthKey = getCurrentMonthKey();
   loadCategories();
   loadAll();
@@ -13,7 +21,7 @@ function init() {
 
 function populateYears() {
   const sel = document.getElementById('f-year');
-  const now = new Date().getFullYear();
+  const now = getNowParts().year;
   sel.innerHTML = '<option value="">All Years</option>';
   for (let y = now + 1; y >= now - 5; y--) {
     sel.innerHTML += `<option value="${y}" ${y === now ? 'selected' : ''}>${y}</option>`;
@@ -21,16 +29,43 @@ function populateYears() {
 }
 
 function setDefaultFilters() {
-  const now = new Date();
-  document.getElementById('f-year').value = String(now.getFullYear());
-  document.getElementById('f-month').value = String(now.getMonth() + 1);
+  const now = getNowParts();
+  document.getElementById('f-year').value = String(now.year);
+  document.getElementById('f-month').value = String(now.month);
   document.getElementById('f-from').value = '';
   document.getElementById('f-to').value = '';
 }
 
+function applyFiltersFromQuery() {
+  const params = new URLSearchParams(window.location.search || '');
+  const y = params.get('year');
+  const m = params.get('month');
+  const openSummary = params.get('openSummary');
+  if (y && /^\d{4}$/.test(y)) {
+    const yearSel = document.getElementById('f-year');
+    const has = Array.from(yearSel.options).some(o => o.value === y);
+    if (!has) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      yearSel.appendChild(opt);
+    }
+    yearSel.value = y;
+  }
+  if (m && /^(?:[1-9]|1[0-2])$/.test(m)) {
+    document.getElementById('f-month').value = String(Number(m));
+  }
+  if (openSummary === '1' || openSummary === 'true') {
+    const panel = document.getElementById('summary-panel');
+    const btn = document.getElementById('btn-toggle-summary');
+    panel.classList.remove('hidden');
+    btn.classList.add('open');
+  }
+}
+
 function getCurrentMonthKey() {
-  const now = new Date();
-  return `${now.getFullYear()}-${now.getMonth() + 1}`;
+  const now = getNowParts();
+  return `${now.year}-${now.month}`;
 }
 
 function applyCurrentMonthFilters() {
@@ -62,6 +97,20 @@ function loadCategories() {
   document.getElementById('edit-cat').innerHTML = opt;
 }
 
+function getOthersCategoryId() {
+  const exact = allCategories.find(c => String(c.name || '').trim().toLowerCase() === 'others');
+  if (exact) return String(exact.id);
+  const partial = allCategories.find(c => String(c.name || '').trim().toLowerCase().startsWith('other'));
+  return partial ? String(partial.id) : '';
+}
+
+function syncEditCategoryForType() {
+  const type = document.getElementById('edit-type').value;
+  if (type !== 'credit') return;
+  const othersId = getOthersCategoryId();
+  if (othersId) document.getElementById('edit-cat').value = othersId;
+}
+
 function getFilters() {
   return {
     year:     document.getElementById('f-year').value,
@@ -75,8 +124,35 @@ function getFilters() {
 
 function loadAll() {
   const filters = getFilters();
+  renderCashPosition(DB.getCashPosition(filters));
   renderSummary(DB.getSummary(filters));
   renderTable(DB.getExpenditures(filters));
+}
+
+function renderCashPosition(snapshot) {
+  const grid = document.getElementById('cash-position-grid');
+  const isPositive = snapshot.current_cash >= 0;
+  const currentClass = isPositive ? 'ok' : 'over';
+  const periodClass = snapshot.period_net >= 0 ? 'ok' : 'over';
+  grid.innerHTML = `
+    <div class="cash-metric ${currentClass}">
+      <span class="cash-metric-label">Current Cash (as of ${formatDate(snapshot.as_of_date)})</span>
+      <strong class="cash-metric-value">₹${formatINR(snapshot.current_cash)}</strong>
+      <span class="cash-metric-sub">Opening ₹${formatINR(snapshot.opening_cash)} from ${formatDate(snapshot.opening_effective_date)}</span>
+    </div>
+    <div class="cash-metric">
+      <span class="cash-metric-label">Income to Date</span>
+      <strong class="cash-metric-value">₹${formatINR(snapshot.total_income_to_date)}</strong>
+    </div>
+    <div class="cash-metric">
+      <span class="cash-metric-label">Expenses to Date</span>
+      <strong class="cash-metric-value">₹${formatINR(snapshot.total_expense_to_date)}</strong>
+    </div>
+    <div class="cash-metric ${periodClass}">
+      <span class="cash-metric-label">Net Change (Current Filter)</span>
+      <strong class="cash-metric-value">${snapshot.period_net >= 0 ? '+' : '-'}₹${formatINR(Math.abs(snapshot.period_net))}</strong>
+      <span class="cash-metric-sub">Income ₹${formatINR(snapshot.period_income)} · Expense ₹${formatINR(snapshot.period_expense)}</span>
+    </div>`;
 }
 
 /* ── Summary cards ──────────────────────────────────────────────────── */
@@ -163,22 +239,34 @@ function renderSummary(rows) {
 
 /* ── Transactions table ─────────────────────────────────────────────── */
 function renderTable(rows) {
-  const tbody   = document.getElementById('exp-tbody');
-  const totalEl = document.getElementById('exp-total');
+  const tbody = document.getElementById('exp-tbody');
+  const totalDebitEl = document.getElementById('exp-total-debit');
+  const totalCreditEl = document.getElementById('exp-total-credit');
   const countEl = document.getElementById('exp-count');
+  const pagerEl = document.getElementById('exp-pager');
+  const pages = Math.max(1, Math.ceil(rows.length / txPager.size));
+  txPager.page = Math.min(Math.max(1, txPager.page), pages);
+  const start = (txPager.page - 1) * txPager.size;
+  const pageRows = rows.slice(start, start + txPager.size);
   countEl.textContent = `${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}`;
 
   if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="3"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">No transactions found for this filter</div></div></td></tr>`;
-    totalEl.textContent = '₹0.00';
+    totalDebitEl.textContent = '₹0.00';
+    totalCreditEl.textContent = '₹0.00';
+    pagerEl.innerHTML = '';
     return;
   }
 
-  const total = rows.reduce((s, r) => s + r.amount, 0);
-  tbody.innerHTML = rows.map(r => `
-    <tr class="tx-row" onclick="toggleTxRow(this)" data-id="${r.id}">
+  const totalDebit = rows.filter(r => (r.type || 'debit') === 'debit').reduce((s, r) => s + r.amount, 0);
+  const totalCredit = rows.filter(r => (r.type || 'debit') === 'credit').reduce((s, r) => s + r.amount, 0);
+  tbody.innerHTML = pageRows.map(r => `
+    <tr class="tx-row ${(r.type || 'debit') === 'credit' ? 'tx-row-credit' : ''}" onclick="toggleTxRow(this)" data-id="${r.id}">
       <td class="tx-date">${formatDate(r.date)}</td>
-      <td class="tx-cat"><span class="badge badge-cat" style="--cat:${r.category_color || '#7c6af7'}">${r.category_name}</span></td>
+      <td class="tx-cat">${(r.type || 'debit') === 'credit'
+        ? '<span class="badge badge-credit">Credit</span>'
+        : `<span class="badge badge-cat" style="--cat:${r.category_color || '#7c6af7'}">${r.category_name}</span>`}
+      </td>
       <td class="tx-amt amount-col">₹${formatINR(r.amount)}</td>
     </tr>
     <tr class="tx-expand" id="txe-${r.id}">
@@ -192,7 +280,54 @@ function renderTable(rows) {
         </div>
       </td>
     </tr>`).join('');
-  totalEl.textContent = '₹' + formatINR(total);
+  totalDebitEl.textContent = '₹' + formatINR(totalDebit);
+  totalCreditEl.textContent = '₹' + formatINR(totalCredit);
+  const from = start + 1;
+  const to = Math.min(rows.length, start + txPager.size);
+  pagerEl.innerHTML = `
+    <div class="pager-bar">
+      <div class="pager-top">
+        <div class="pager-meta">Showing ${from}-${to} of ${rows.length}</div>
+        <div class="pager-rows">
+          <label>rows</label>
+          <select id="exp-pager-size">
+            ${[5, 10, 20, 50].map(n => `<option value="${n}" ${n === txPager.size ? 'selected' : ''}>${n}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="pager-nav">
+        <button class="btn btn-ghost btn-sm" id="exp-pager-first" ${txPager.page <= 1 ? 'disabled' : ''} title="First page">«</button>
+        <button class="btn btn-ghost btn-sm" id="exp-pager-prev" ${txPager.page <= 1 ? 'disabled' : ''}>Prev</button>
+        <span class="pager-page">${txPager.page}/${pages}</span>
+        <button class="btn btn-ghost btn-sm" id="exp-pager-next" ${txPager.page >= pages ? 'disabled' : ''}>Next</button>
+        <button class="btn btn-ghost btn-sm" id="exp-pager-last" ${txPager.page >= pages ? 'disabled' : ''} title="Last page">»</button>
+      </div>
+    </div>`;
+  document.getElementById('exp-pager-size').addEventListener('change', e => {
+    txPager.size = Number(e.target.value) || 10;
+    txPager.page = 1;
+    loadAll();
+  });
+  document.getElementById('exp-pager-first').addEventListener('click', () => {
+    if (txPager.page <= 1) return;
+    txPager.page = 1;
+    loadAll();
+  });
+  document.getElementById('exp-pager-prev').addEventListener('click', () => {
+    if (txPager.page <= 1) return;
+    txPager.page -= 1;
+    loadAll();
+  });
+  document.getElementById('exp-pager-next').addEventListener('click', () => {
+    if (txPager.page >= pages) return;
+    txPager.page += 1;
+    loadAll();
+  });
+  document.getElementById('exp-pager-last').addEventListener('click', () => {
+    if (txPager.page >= pages) return;
+    txPager.page = pages;
+    loadAll();
+  });
 }
 
 /* ── Row expand/collapse ─────────────────────────────────────────────── */
@@ -225,6 +360,8 @@ function openEdit(id) {
   document.getElementById('edit-id').value     = entry.id;
   document.getElementById('edit-date').value   = entry.date;
   document.getElementById('edit-cat').value    = entry.category_id;
+  document.getElementById('edit-type').value   = entry.type || 'debit';
+  syncEditCategoryForType();
   document.getElementById('edit-amount').value = parseFloat(entry.amount).toLocaleString('en-IN', { maximumFractionDigits: 2 });
   document.getElementById('edit-notes').value  = entry.notes || '';
   openModal();
@@ -240,6 +377,7 @@ document.getElementById('edit-form').addEventListener('submit', e => {
     DB.updateExpenditure(document.getElementById('edit-id').value, {
       date:        document.getElementById('edit-date').value,
       category_id: document.getElementById('edit-cat').value,
+      type:        document.getElementById('edit-type').value,
       amount:      amt,
       notes:       document.getElementById('edit-notes').value
     });
@@ -254,6 +392,7 @@ document.getElementById('edit-form').addEventListener('submit', e => {
 document.getElementById('modal-close-btn').addEventListener('click', closeModal);
 document.getElementById('modal-cancel').addEventListener('click', closeModal);
 document.getElementById('modal-backdrop').addEventListener('click', closeModal);
+document.getElementById('edit-type').addEventListener('change', syncEditCategoryForType);
 setupAmountInput(document.getElementById('edit-amount'));
 
 /* ── Summary toggle ─────────────────────────────────────────────────── */
@@ -273,7 +412,10 @@ document.getElementById('btn-toggle-filters').addEventListener('click', () => {
 });
 
 /* ── Filter controls ────────────────────────────────────────────────── */
-document.getElementById('btn-apply').addEventListener('click', loadAll);
+document.getElementById('btn-apply').addEventListener('click', () => {
+  txPager.page = 1;
+  loadAll();
+});
 document.getElementById('btn-clear').addEventListener('click', () => {
   document.getElementById('f-from').value = '';
   document.getElementById('f-to').value   = '';
@@ -282,18 +424,23 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   populateYears();
   setDefaultFilters();
   activeMonthKey = getCurrentMonthKey();
+  txPager.page = 1;
   loadAll();
 });
 
 let searchDebounceId = null;
 document.getElementById('f-search').addEventListener('input', () => {
   clearTimeout(searchDebounceId);
-  searchDebounceId = setTimeout(loadAll, 180);
+  searchDebounceId = setTimeout(() => {
+    txPager.page = 1;
+    loadAll();
+  }, 180);
 });
 document.getElementById('f-search').addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
   clearTimeout(searchDebounceId);
+  txPager.page = 1;
   loadAll();
 });
 

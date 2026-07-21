@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0c0c10">
+  <title>Income Log – FinTrack</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation"></button>
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-icon">₹</div>
+      FinTrack
+    </a>
+    <div class="nav-links" id="nav-links">
+      <a href="index.html" class="nav-link">Dashboard</a>
+      <a href="new-entry.html" class="nav-link">New Entry</a>
+      <a href="admin.html" class="nav-link">Admin</a>
+      <a href="reports.html" class="nav-link">Reports</a>
+      <a href="income-log.html" class="nav-link">Income Log</a>
+    </div>
+    <div class="nav-right">
+      <button class="perf-toggle" id="perf-toggle" title="Toggle performance mode">⚡</button>
+      <button class="theme-toggle" id="theme-toggle" title="Toggle theme">☀️</button>
+    </div>
+  </div>
+</nav>
+
+<main class="main compact-admin">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Monthly Income Log</h1>
+      <p class="page-subtitle">Month-wise salary and transaction totals</p>
+    </div>
+    <a href="admin.html" class="btn btn-ghost">← Back to Admin</a>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table class="goal-grid-table income-log-table">
+        <thead>
+          <tr>
+            <th class="income-col-year">Year</th>
+            <th>Month</th>
+            <th class="amount-col">Salary (₹)</th>
+            <th class="amount-col">Total Debit Txn (₹)</th>
+            <th class="amount-col income-col-net">Net (₹)</th>
+          </tr>
+        </thead>
+        <tbody id="income-log-tbody">
+          <tr><td colspan="5"><div class="empty"><div class="empty-icon">📒</div><div class="empty-text">Loading…</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pager-host" id="income-log-pager"></div>
+  </div>
+</main>
+
+<script src="js/db.js"></script>
+<script src="js/common.js"></script>
+<script src="js/income-log.js"></script>
+</body>
+</html>

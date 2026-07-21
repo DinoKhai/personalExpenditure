@@ -21,6 +21,7 @@
       <a href="new-entry.html" class="nav-link">New Entry</a>
       <a href="admin.html"     class="nav-link">Admin</a>
       <a href="reports.html"   class="nav-link">Reports</a>
+      <a href="income-log.html" class="nav-link">Income Log</a>
     </div>
     <div class="nav-right">
       <button class="perf-toggle" id="perf-toggle" title="Toggle performance mode">⚡</button>
@@ -56,6 +57,14 @@
       </div>
 
       <div class="form-group">
+        <label>Transaction Type</label>
+        <select id="field-type">
+          <option value="debit" selected>Debit</option>
+          <option value="credit">Credit</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label>Amount (₹)</label>
         <div class="input-prefix">
           <span>₹</span>
@@ -72,7 +81,7 @@
                maxlength="200">
       </div>
 
-      <div class="btn-group" style="margin-top:.5rem">
+      <div class="btn-group section-actions" style="margin-top:.5rem">
         <button type="submit" class="btn btn-primary" id="submit-btn">Save Entry</button>
         <button type="button" class="btn btn-ghost"   id="clear-btn">Clear</button>
       </div>
@@ -82,6 +91,7 @@
 
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="js/db.js"></script>
 <script src="js/common.js"></script>
 <script src="js/new-entry.js"></script>
