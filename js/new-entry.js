@@ -19,6 +19,7 @@ function syncCategoryForType() {
 }
 
 function init() {
+  if (!isEdit) document.getElementById('field-date').value = todayISO();
   const cats = DB.getAllCategories();
   document.getElementById('field-cat').innerHTML =
     '<option value="">— Select category —</option>' +
@@ -88,7 +89,7 @@ document.getElementById('entry-form').addEventListener('submit', e => {
 });
 
 function resetForm() {
-  document.getElementById('field-date').value   = '';
+  document.getElementById('field-date').value   = todayISO();
   document.getElementById('field-cat').value    = '';
   document.getElementById('field-amount').value = '';
   document.getElementById('field-notes').value  = '';

@@ -941,6 +941,8 @@ th.amount-col { text-align: right; }
 
 /* Compact New Entry page */
 .compact-entry .page-header { margin-bottom: 1rem; }
+.compact-entry .page-title { font-size: 1.55rem; }
+.compact-entry .page-subtitle { font-size: .88rem; }
 .compact-entry .form-card {
   padding: .95rem;
   max-width: 450px;
@@ -1466,6 +1468,19 @@ optgroup {
   .hide-sm { display: none !important; }
   .form-card { padding: 1.25rem; }
   .main { padding: 1.5rem 1rem 3rem; }
+  .compact-entry .page-title { font-size: 1.38rem; }
+}
+
+/* iOS Safari zoom-prevention: keep form controls at >=16px on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  input[type="text"],
+  input[type="date"],
+  input[type="time"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 @media (max-width: 480px) {
