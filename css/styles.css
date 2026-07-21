@@ -1028,36 +1028,38 @@ th.amount-col { text-align: right; }
 .compact-dashboard .tx-search-wrap input { min-height: 31px; font-size: .8rem; }
 
 .cash-position-card {
-  padding: .4rem .5rem;
+  padding: .5rem .6rem;
 }
 .cash-position-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: .34rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .4rem;
 }
 .cash-metric {
   background: color-mix(in srgb, var(--card) 90%, var(--bg-2) 10%);
   border-radius: var(--radius-sm);
-  padding: .34rem .42rem;
+  padding: .45rem .65rem;
   display: flex;
   flex-direction: column;
-  gap: .08rem;
+  gap: .14rem;
 }
 .cash-metric.ok { background: color-mix(in srgb, var(--success-dim) 55%, var(--card) 45%); }
 .cash-metric.over { background: color-mix(in srgb, var(--danger-dim) 55%, var(--card) 45%); }
 .cash-metric-label {
-  font-size: .56rem;
+  font-size: .72rem;
+  font-weight: 700;
   color: var(--text-3);
-  letter-spacing: .05em;
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
 .cash-metric-value {
-  font-size: .84rem;
-  line-height: 1.14;
+  font-size: .9rem;
+  line-height: 1.2;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 .cash-metric-sub {
-  font-size: .62rem;
+  font-size: .72rem;
   color: var(--text-2);
 }
 
